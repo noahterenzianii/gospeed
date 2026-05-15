@@ -1,6 +1,6 @@
 BINARY=gospeed
 build:
-	go build -o $(BINARY) .
+	go build -o $(BINARY) ./cmd/gospeed
 run: build
 	./$(BINARY)
 clean:
