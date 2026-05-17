@@ -1,6 +1,6 @@
 # gospeed
 
-A small Go CLI that measures download speed by automatically selecting the endpoint with the lowest latency.
+A small Go CLI that measures download and upload speed by automatically selecting the endpoint with the lowest latency.
 
 ## Requirements
 
@@ -27,5 +27,5 @@ make clean   # remove binary
 cmd/gospeed/main.go        # CLI entrypoint
 internal/app/run.go        # app orchestration
 internal/endpoints/        # endpoint discovery, ping, and selection
-internal/speedtest/        # download speed measurement
+internal/speedtest/        # download and upload speed measurement
 ```
