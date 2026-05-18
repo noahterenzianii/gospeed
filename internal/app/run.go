@@ -22,17 +22,23 @@ func Run() error {
 
 	fmt.Printf("Best Server: %v\n", best.Latency)
 	downloadURL := strings.TrimRight(best.ServerURL, "/") + "/" + strings.TrimLeft(best.DlURL, "/")
-	downloadSpeed, err := speedtest.MeasureDownload(downloadURL, 10*time.Second, 4)
+	downloadSpeed, err := speedtest.MeasureDownload(downloadURL, 10*time.Second, 4,
+		func(currentMbps float64) {
+			fmt.Printf("\rDownload: %.2f Mbit/s", currentMbps)
+		})
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Download speed: %.2f Mbit/s\n", downloadSpeed)
+	fmt.Printf("\nDownload speed: %.2f Mbit/s\n", downloadSpeed)
 
 	uploadURL := strings.TrimRight(best.ServerURL, "/") + "/" + strings.TrimLeft(best.UlURL, "/")
-	uploadSpeed, err := speedtest.MeasureUpload(uploadURL, 10*time.Second, 4)
+	uploadSpeed, err := speedtest.MeasureUpload(uploadURL, 10*time.Second, 4,
+		func(currentMbps float64) {
+			fmt.Printf("\rDownload: %.2f Mbit/s", currentMbps)
+		})
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Upload speed: %.2f Mbit/s\n", uploadSpeed)
+	fmt.Printf("\nUpload speed: %.2f Mbit/s\n", uploadSpeed)
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func MeasureUpload(url string, duration time.Duration, streams int) (float64, error) {
+func MeasureUpload(url string, duration time.Duration, streams int, onProgress ProgressFunc) (float64, error) {
 	if streams < 1 {
 		streams = 1
 	}
@@ -78,6 +78,8 @@ func MeasureUpload(url string, duration time.Duration, streams int) (float64, er
 			}
 		}(workerID)
 	}
+	_, stopProgress := startProgress(&totalBytes, start, onProgress)
+	defer stopProgress()
 	wg.Wait()
 	elapsed := time.Since(start).Seconds()
 	if elapsed <= 0 {
