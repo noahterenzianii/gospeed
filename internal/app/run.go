@@ -9,6 +9,12 @@ import (
 )
 
 func Run() error {
+	info, err := endpoints.FetchClientInfo()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Testing from: %s (%s) %s - %s (%s)\n", info.IP, info.Org, info.Country, info.City, info.Region)
+
 	servers, err := endpoints.FetchServers("https://librespeed.org/backend-servers/servers.php")
 	if err != nil {
 		return err

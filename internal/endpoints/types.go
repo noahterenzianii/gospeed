@@ -18,3 +18,15 @@ type Server struct {
 func (s *Server) URL(path string) string {
 	return strings.TrimRight(s.ServerURL, "/") + "/" + strings.TrimLeft(path, "/")
 }
+
+type ClientInfo struct {
+	IP       string `json:"ip"`
+	Hostname string `json:"hostname"`
+	City     string `json:"city"`
+	Region   string `json:"region"`
+	Country  string `json:"country"`
+	Loc      string `json:"loc"`
+	Org      string `json:"org"`
+	Postal   string `json:"postal"`
+	Timezone string `json:"timezone"`
+}
