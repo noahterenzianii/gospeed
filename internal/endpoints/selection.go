@@ -25,13 +25,23 @@ func FindBestServer(servers []Server) *Server {
 			defer func() { <-sem }() // Release the slot back to the semaphore
 
 			pingURL := strings.TrimRight(s.ServerURL, "/") + "/" + strings.TrimLeft(s.PingURL, "/")
-			lat, err := PingServer(pingURL)
-			if err != nil {
-				// Assign maximum latency if the server is unreachable
-				s.Latency = time.Duration(math.MaxInt64)
-				return
+			success := 0
+			var best time.Duration
+			for _ = range 3 {
+				lat, err := PingServer(pingURL)
+				if err != nil {
+					continue
+				}
+				if success == 0 || lat < best {
+					best = lat
+				}
+				success++
 			}
-			s.Latency = lat
+			if success == 0 {
+				s.Latency = time.Duration(math.MaxInt64)
+			} else {
+				s.Latency = best
+			}
 		}(&servers[i])
 	}
 

@@ -21,6 +21,14 @@ func Run() error {
 	}
 
 	fmt.Printf("Best Server: %v\n", best.Latency)
+
+	pingURL := strings.TrimRight(best.ServerURL, "/") + "/" + strings.TrimLeft(best.PingURL, "/")
+	jitter, err := endpoints.MeasureJitter(pingURL, 200)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("jitter: %v\n", jitter)
+
 	downloadURL := strings.TrimRight(best.ServerURL, "/") + "/" + strings.TrimLeft(best.DlURL, "/")
 	downloadSpeed, err := speedtest.MeasureDownload(downloadURL, 10*time.Second, 4,
 		func(currentMbps float64) {
