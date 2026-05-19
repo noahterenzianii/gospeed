@@ -24,15 +24,15 @@ func Run() error {
 		fmt.Println("No server reachable")
 		return nil
 	}
-
-	fmt.Printf("Best Server: %v\n", best.Latency)
+	// fmt.Printf("Best Server: %v\n", best.Latency)
 
 	pingURL := best.URL(best.PingURL)
-	jitter, err := endpoints.MeasureJitter(pingURL, 200)
+	latency, err := endpoints.MeasureLatency(pingURL, 200)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("jitter: %v\n", jitter)
+	fmt.Printf("Ping: %v\n", latency.Ping)
+	fmt.Printf("jitter: %v\n", latency.Jitter)
 
 	downloadURL := best.URL(best.DlURL)
 	downloadSpeed, err := speedtest.MeasureDownload(downloadURL, 10*time.Second, 4,

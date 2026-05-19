@@ -30,3 +30,8 @@ type ClientInfo struct {
 	Postal   string `json:"postal"`
 	Timezone string `json:"timezone"`
 }
+
+type Latency struct {
+	Ping   time.Duration
+	Jitter time.Duration
+}
