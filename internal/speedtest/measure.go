@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const bufferSize = 256 * 1024
+
 func runMeasurement(duration time.Duration,
 	streams int,
 	onProgress ProgressFunc,

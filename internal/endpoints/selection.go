@@ -3,7 +3,6 @@ package endpoints
 import (
 	"math"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 )
@@ -24,7 +23,7 @@ func FindBestServer(servers []Server) *Server {
 			defer wg.Done()          // Decrement counter when the request is finished
 			defer func() { <-sem }() // Release the slot back to the semaphore
 
-			pingURL := strings.TrimRight(s.ServerURL, "/") + "/" + strings.TrimLeft(s.PingURL, "/")
+			pingURL := s.URL(s.PingURL)
 			success := 0
 			var best time.Duration
 			for _ = range 3 {

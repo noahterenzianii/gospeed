@@ -41,7 +41,7 @@ func Run() error {
 	uploadURL := best.URL(best.UlURL)
 	uploadSpeed, err := speedtest.MeasureUpload(uploadURL, 10*time.Second, 4,
 		func(currentMbps float64) {
-			fmt.Printf("\rDownload: %.2f Mbit/s", currentMbps)
+			fmt.Printf("\rUpload: %.2f Mbit/s", currentMbps)
 		})
 	if err != nil {
 		return err

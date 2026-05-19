@@ -12,8 +12,7 @@ import (
 )
 
 func MeasureUpload(url string, duration time.Duration, streams int, onProgress ProgressFunc) (float64, error) {
-	chunkSize := 256 * 1024
-	payload := make([]byte, chunkSize)
+	payload := make([]byte, bufferSize)
 	if _, err := rand.Read(payload); err != nil {
 		return 0, fmt.Errorf("failed to generate random data: %w", err)
 	}
@@ -39,7 +38,7 @@ func MeasureUpload(url string, duration time.Duration, streams int, onProgress P
 				io.Copy(io.Discard, resp.Body)
 				resp.Body.Close()
 				if resp.StatusCode == http.StatusOK {
-					totalBytes.Add(int64(chunkSize))
+					totalBytes.Add(int64(bufferSize))
 					completedRuns.Add(1)
 				}
 				if ctx.Err() != nil {
