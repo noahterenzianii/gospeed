@@ -31,6 +31,20 @@ type ClientInfo struct {
 	Timezone string `json:"timezone"`
 }
 
+func (c *ClientInfo) LocationString() string {
+	parts := make([]string, 0, 3)
+	if c.City != "" {
+		parts = append(parts, c.City)
+	}
+	if c.Region != "" {
+		parts = append(parts, c.Region)
+	}
+	if c.Country != "" {
+		parts = append(parts, c.Country)
+	}
+	return strings.Join(parts, ", ")
+}
+
 type Latency struct {
 	Ping   time.Duration
 	Jitter time.Duration
