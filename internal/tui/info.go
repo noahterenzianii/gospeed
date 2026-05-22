@@ -8,8 +8,6 @@ import (
 	"github.com/noahterenzianii/gospeed/internal/endpoints"
 )
 
-const labelWidth = 12
-
 var labelStyle = lipgloss.NewStyle().Foreground(cMuted).Width(labelWidth)
 
 func addField(rows []string, label, value string, color lipgloss.Color) []string {

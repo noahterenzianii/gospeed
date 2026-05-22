@@ -46,6 +46,7 @@ func (c *ClientInfo) LocationString() string {
 }
 
 type Latency struct {
-	Ping   time.Duration
-	Jitter time.Duration
+	Ping    time.Duration
+	Jitter  time.Duration
+	Samples []time.Duration
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sort"
+	"slices"
 	"time"
 )
 
@@ -24,7 +24,7 @@ func PingServer(url string) (time.Duration, error) {
 
 func MeasureLatency(url string, count int) (Latency, error) {
 	if count < 2 {
-		return Latency{}, fmt.Errorf("count must e >= 2")
+		return Latency{}, fmt.Errorf("count must be >= 2")
 	}
 
 	// warmup
@@ -32,21 +32,21 @@ func MeasureLatency(url string, count int) (Latency, error) {
 		return Latency{}, err
 	}
 
-	samples := make([]float64, 0, count)
+	samples := make([]time.Duration, 0, count)
 	for range count {
 		lat, err := PingServer(url)
 		if err != nil {
 			return Latency{}, err
 		}
-		samples = append(samples, float64(lat))
+		samples = append(samples, lat)
 	}
 
-	sorted := make([]float64, len(samples))
+	sorted := make([]time.Duration, len(samples))
 	copy(sorted, samples)
-	sort.Float64s(sorted)
-	ping := time.Duration(sorted[count/2])
+	slices.Sort(sorted)
+	ping := sorted[count/2]
 
-	var sumDiff float64
+	var sumDiff time.Duration
 	for i := 1; i < len(samples); i++ {
 		diff := samples[i] - samples[i-1]
 		if diff < 0 {
@@ -54,6 +54,6 @@ func MeasureLatency(url string, count int) (Latency, error) {
 		}
 		sumDiff += diff
 	}
-	jitter := time.Duration(sumDiff / float64(len(samples)-1))
-	return Latency{ping, jitter}, nil
+	jitter := sumDiff / time.Duration(len(samples)-1)
+	return Latency{Ping: ping, Jitter: jitter, Samples: samples}, nil
 }
