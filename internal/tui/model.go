@@ -30,6 +30,7 @@ type Model struct {
 	phase      phase
 	spinner    spinner.Model
 	err        error
+	generation int
 }
 
 func NewModel() Model {
@@ -45,37 +46,40 @@ func (m Model) Init() tea.Cmd {
 // --- async commands ---
 
 func (m Model) fetchClientInfo() tea.Cmd {
+	gen := m.generation
 	return func() tea.Msg {
 		info, err := endpoints.FetchClientInfo()
 		if err != nil {
-			return errMsg{err}
+			return errMsg{gen, err}
 		}
-		return clientInfoMsg{info}
+		return clientInfoMsg{gen, info}
 	}
 }
 
 func (m Model) fetchServers() tea.Cmd {
+	gen := m.generation
 	return func() tea.Msg {
 		servers, err := endpoints.FetchServers(serverListURL)
 		if err != nil {
-			return errMsg{err}
+			return errMsg{gen, err}
 		}
 		best := endpoints.FindBestServer(servers)
 		if best == nil {
-			return errMsg{fmt.Errorf("no reachable server")}
+			return errMsg{gen, fmt.Errorf("no reachable server")}
 		}
-		return serverMsg{best}
+		return serverMsg{gen, best}
 	}
 }
 
 func (m Model) measureLatency() tea.Cmd {
+	gen := m.generation
 	return func() tea.Msg {
 		pingURL := m.server.URL(m.server.PingURL)
 		latency, err := endpoints.MeasureLatency(pingURL, pingSamples)
 		if err != nil {
-			return errMsg{err}
+			return errMsg{gen, err}
 		}
-		return latencyMsg{&latency}
+		return latencyMsg{gen, &latency}
 	}
 }
 
@@ -93,21 +97,31 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.latency = nil
 			m.err = nil
 			m.phase = phaseFetching
+			m.generation++
 			return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
 		}
 		return m, nil
 
 	case clientInfoMsg:
+		if msg.gen != m.generation {
+			return m, nil
+		}
 		m.clientInfo = msg.info
 		m.phase = phaseInfo
 		return m, tea.Batch(m.fetchServers(), m.spinner.Tick)
 
 	case serverMsg:
+		if msg.gen != m.generation {
+			return m, nil
+		}
 		m.server = msg.server
 		m.phase = phasePinging
 		return m, tea.Batch(m.measureLatency(), m.spinner.Tick)
 
 	case latencyMsg:
+		if msg.gen != m.generation {
+			return m, nil
+		}
 		m.latency = msg.latency
 		m.phase = phasePing
 		return m, nil
@@ -121,6 +135,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case errMsg:
+		if msg.gen != m.generation {
+			return m, nil
+		}
 		m.err = msg.err
 		return m, nil
 	}
