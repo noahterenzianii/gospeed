@@ -73,8 +73,6 @@ func fmtDuration(d time.Duration) string {
 func pingView(latency *endpoints.Latency) string {
 	var rows []string
 
-	rows = append(rows, dimStyle.Render("  ping"))
-
 	latLabel := labelStyle.Render("latency")
 	latVal := lipgloss.NewStyle().Foreground(cGreen).Bold(true).Render(
 		fmtDuration(latency.Ping),

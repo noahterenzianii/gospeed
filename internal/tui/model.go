@@ -127,15 +127,15 @@ func (m Model) View() string {
 	header := asciiView()
 
 	if m.err != nil {
-		return fmt.Sprintf("%s\n\n  error: %v\n\n  press q to quit", header, m.err)
+		return fmt.Sprintf("%s\n\n  error: %v\n%s", header, m.err, footerView())
 	}
 
 	screens := m.buildScreens()
 	if len(screens) > 0 {
-		return fmt.Sprintf("%s\n\n%s", header, strings.Join(screens, "\n\n"))
+		return fmt.Sprintf("%s\n\n%s\n%s", header, strings.Join(screens, "\n\n"), footerView())
 	}
 
-	return fmt.Sprintf("%s\n\n  %s", header, mutedStyle.Render("fetching client info..."))
+	return fmt.Sprintf("%s\n\n  %s\n%s", header, mutedStyle.Render("fetching client info..."), footerView())
 }
 
 func (m Model) buildScreens() []string {
@@ -152,7 +152,6 @@ func (m Model) buildScreens() []string {
 	return screens
 }
 
-
 func (m Model) pingScreen() string {
 	if m.latency != nil {
 		return pingView(m.latency)
@@ -165,4 +164,8 @@ func (m Model) pingScreen() string {
 		status = "pinging server"
 	}
 	return fmt.Sprintf("  %s %s", dimStyle.Render(m.spinner.View()), status)
+}
+
+func footerView() string {
+	return mutedStyle.Render("\n  q: quit")
 }
