@@ -39,7 +39,7 @@ func NewModel() Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return m.fetchClientInfo()
+	return tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
 }
 
 // --- async commands ---
@@ -87,6 +87,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
+		case "r":
+			m.clientInfo = nil
+			m.server = nil
+			m.latency = nil
+			m.err = nil
+			m.phase = phaseFetching
+			return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
 		}
 		return m, nil
 
@@ -108,7 +115,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case spinner.TickMsg:
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
-		if m.phase == phaseInfo || m.phase == phasePinging {
+		if m.phase == phaseFetching || m.phase == phaseInfo || m.phase == phasePinging {
 			return m, cmd
 		}
 		return m, nil
@@ -156,16 +163,20 @@ func (m Model) pingScreen() string {
 	if m.latency != nil {
 		return pingView(m.latency)
 	}
-	if m.phase != phaseInfo && m.phase != phasePinging {
-		return ""
-	}
-	status := "choosing server"
-	if m.phase == phasePinging {
+	var status string
+	switch m.phase {
+	case phaseFetching:
+		status = "fetching client info"
+	case phaseInfo:
+		status = "choosing server"
+	case phasePinging:
 		status = "pinging server"
+	default:
+		return ""
 	}
 	return fmt.Sprintf("  %s %s", dimStyle.Render(m.spinner.View()), status)
 }
 
 func footerView() string {
-	return mutedStyle.Render("\n  q: quit")
+	return mutedStyle.Render("\n  q: quit • r: redo")
 }
