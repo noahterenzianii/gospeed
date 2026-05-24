@@ -10,45 +10,41 @@ import (
 )
 
 func (m Model) fetchClientInfo() tea.Cmd {
-	gen := m.generation
 	return func() tea.Msg {
 		info, err := endpoints.FetchClientInfo()
 		if err != nil {
-			return errMsg{gen, err}
+			return errMsg{err}
 		}
-		return clientInfoMsg{gen, info}
+		return clientInfoMsg{info}
 	}
 }
 
 func (m Model) fetchServers() tea.Cmd {
-	gen := m.generation
 	return func() tea.Msg {
 		servers, err := endpoints.FetchServers(serverListURL)
 		if err != nil {
-			return errMsg{gen, err}
+			return errMsg{err}
 		}
 		best := endpoints.FindBestServer(servers)
 		if best == nil {
-			return errMsg{gen, fmt.Errorf("no reachable server")}
+			return errMsg{fmt.Errorf("no reachable server")}
 		}
-		return serverMsg{gen, best}
+		return serverMsg{best}
 	}
 }
 
 func (m Model) measureLatency() tea.Cmd {
-	gen := m.generation
 	return func() tea.Msg {
 		pingURL := m.server.URL(m.server.PingURL)
 		latency, err := endpoints.MeasureLatency(pingURL, pingSamples)
 		if err != nil {
-			return errMsg{gen, err}
+			return errMsg{err}
 		}
-		return latencyMsg{gen, &latency}
+		return latencyMsg{&latency}
 	}
 }
 
 func (m Model) measureDownload() (tea.Cmd, chan tea.Msg) {
-	gen := m.generation
 	dlURL := m.server.URL(m.server.DlURL)
 	ch := make(chan tea.Msg, downloadBufSize)
 	go func() {
@@ -60,14 +56,14 @@ func (m Model) measureDownload() (tea.Cmd, chan tea.Msg) {
 			snapshot := make([]float64, len(samples))
 			copy(snapshot, samples)
 			select {
-			case ch <- downloadProgressMsg{gen, DownloadState{Speed: mbps, Samples: snapshot, Elapsed: elapsed}, false}:
+			case ch <- downloadProgressMsg{DownloadState{Speed: mbps, Samples: snapshot, Elapsed: elapsed}, false}:
 			default:
 			}
 		})
 		if err != nil {
-			ch <- errMsg{gen, err}
+			ch <- errMsg{err}
 		} else {
-			ch <- downloadProgressMsg{gen, DownloadState{Speed: speed, Samples: samples, Elapsed: time.Since(start)}, true}
+			ch <- downloadProgressMsg{DownloadState{Speed: speed, Samples: samples, Elapsed: time.Since(start)}, true}
 		}
 		close(ch)
 	}()

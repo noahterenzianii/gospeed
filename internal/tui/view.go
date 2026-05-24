@@ -9,15 +9,15 @@ func (m Model) View() string {
 	header := asciiView()
 
 	if m.err != nil {
-		return fmt.Sprintf("%s\n\n  error: %v\n%s", header, m.err, footerView())
+		return fmt.Sprintf("%s\n\n  error: %v\n%s", header, m.err, m.footerView())
 	}
 
 	screens := m.buildScreens()
 	if len(screens) > 0 {
-		return fmt.Sprintf("%s\n\n%s\n%s", header, strings.Join(screens, "\n\n"), footerView())
+		return fmt.Sprintf("%s\n\n%s\n%s", header, strings.Join(screens, "\n\n"), m.footerView())
 	}
 
-	return fmt.Sprintf("%s\n\n  %s\n%s", header, mutedStyle.Render("fetching client info..."), footerView())
+	return fmt.Sprintf("%s\n\n  %s\n%s", header, mutedStyle.Render("fetching client info..."), m.footerView())
 }
 
 func (m Model) buildScreens() []string {
@@ -62,6 +62,9 @@ func (m Model) downloadScreen() string {
 	return ""
 }
 
-func footerView() string {
-	return mutedStyle.Render("\n  q: quit • r: redo")
+func (m Model) footerView() string {
+	if m.canRedo() {
+		return mutedStyle.Render("\n  q: quit • r: redo")
+	}
+	return mutedStyle.Render("\n  q: quit")
 }

@@ -30,6 +30,9 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "q", "ctrl+c":
 		return m, tea.Quit
 	case "r":
+		if !m.canRedo() {
+			return m, nil
+		}
 		m.clientInfo = nil
 		m.server = nil
 		m.latency = nil
@@ -37,34 +40,24 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.downloadCh = nil
 		m.err = nil
 		m.phase = phaseFetching
-		m.generation++
 		return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
 	}
 	return m, nil
 }
 
 func (m Model) handleClientInfo(msg clientInfoMsg) (tea.Model, tea.Cmd) {
-	if msg.gen != m.generation {
-		return m, nil
-	}
 	m.clientInfo = msg.info
 	m.phase = phaseInfo
 	return m, tea.Batch(m.fetchServers(), m.spinner.Tick)
 }
 
 func (m Model) handleServer(msg serverMsg) (tea.Model, tea.Cmd) {
-	if msg.gen != m.generation {
-		return m, nil
-	}
 	m.server = msg.server
 	m.phase = phasePinging
 	return m, tea.Batch(m.measureLatency(), m.spinner.Tick)
 }
 
 func (m Model) handleLatency(msg latencyMsg) (tea.Model, tea.Cmd) {
-	if msg.gen != m.generation {
-		return m, nil
-	}
 	m.latency = msg.latency
 	m.phase = phaseDownloading
 	cmd, ch := m.measureDownload()
@@ -73,12 +66,6 @@ func (m Model) handleLatency(msg latencyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleDownloadProgress(msg downloadProgressMsg) (tea.Model, tea.Cmd) {
-	if msg.gen != m.generation {
-		if m.downloadCh != nil {
-			return m, listenDownload(m.downloadCh)
-		}
-		return m, nil
-	}
 	m.download = &DownloadState{
 		Speed:   msg.state.Speed,
 		Samples: msg.state.Samples,
@@ -101,9 +88,6 @@ func (m Model) handleSpinnerTick(msg spinner.TickMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleError(msg errMsg) (tea.Model, tea.Cmd) {
-	if msg.gen != m.generation {
-		return m, nil
-	}
 	m.err = msg.err
 	return m, nil
 }

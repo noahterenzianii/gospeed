@@ -43,16 +43,19 @@ type Model struct {
 
 	downloadCh chan tea.Msg
 
-	phase      phase
-	spinner    spinner.Model
-	err        error
-	generation int
+	phase   phase
+	spinner spinner.Model
+	err     error
 }
 
 func NewModel() Model {
 	s := spinner.New()
 	s.Style = dimStyle
 	return Model{phase: phaseFetching, spinner: s}
+}
+
+func (m Model) canRedo() bool {
+	return m.err != nil || m.phase == phasePing || m.phase == phaseDownload
 }
 
 func (m Model) loading() bool {
