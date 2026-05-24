@@ -1,6 +1,8 @@
 package tui
 
-import "github.com/noahterenzianii/gospeed/internal/endpoints"
+import (
+	"github.com/noahterenzianii/gospeed/internal/endpoints"
+)
 
 type clientInfoMsg struct {
 	gen  int
@@ -15,6 +17,12 @@ type serverMsg struct {
 type latencyMsg struct {
 	gen     int
 	latency *endpoints.Latency
+}
+
+type downloadProgressMsg struct {
+	gen   int
+	state DownloadState
+	done  bool
 }
 
 type errMsg struct {
