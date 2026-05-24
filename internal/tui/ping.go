@@ -9,6 +9,7 @@ import (
 	"github.com/noahterenzianii/gospeed/internal/endpoints"
 )
 
+// fmtDuration formats a duration as a human-readable millisecond string.
 func fmtDuration(d time.Duration) string {
 	ms := float64(d) / float64(time.Millisecond)
 	if ms < 1 {

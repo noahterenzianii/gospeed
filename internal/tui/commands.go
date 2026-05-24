@@ -9,6 +9,7 @@ import (
 	"github.com/noahterenzianii/gospeed/internal/speedtest"
 )
 
+// fetchClientInfo retrieves the client's IP, ISP, and location.
 func (m Model) fetchClientInfo() tea.Cmd {
 	return func() tea.Msg {
 		info, err := endpoints.FetchClientInfo()
@@ -19,6 +20,7 @@ func (m Model) fetchClientInfo() tea.Cmd {
 	}
 }
 
+// fetchServers fetches the server list and selects the best one.
 func (m Model) fetchServers() tea.Cmd {
 	return func() tea.Msg {
 		servers, err := endpoints.FetchServers(serverListURL)
@@ -33,6 +35,7 @@ func (m Model) fetchServers() tea.Cmd {
 	}
 }
 
+// measureLatency runs ping samples against the selected server.
 func (m Model) measureLatency() tea.Cmd {
 	return func() tea.Msg {
 		pingURL := m.server.URL(m.server.PingURL)
@@ -44,6 +47,7 @@ func (m Model) measureLatency() tea.Cmd {
 	}
 }
 
+// measureDownload starts a goroutine that streams download progress via a channel.
 func (m Model) measureDownload() (tea.Cmd, chan tea.Msg) {
 	dlURL := m.server.URL(m.server.DlURL)
 	ch := make(chan tea.Msg, downloadBufSize)
@@ -70,6 +74,7 @@ func (m Model) measureDownload() (tea.Cmd, chan tea.Msg) {
 	return listenDownload(ch), ch
 }
 
+// listenDownload wraps channel reads as a bubbletea command.
 func listenDownload(ch chan tea.Msg) tea.Cmd {
 	return func() tea.Msg {
 		msg, ok := <-ch

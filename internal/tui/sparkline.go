@@ -6,6 +6,7 @@ import (
 
 const sparkWidth = 30
 
+// renderSparkline downsamples data to sparkWidth buckets and renders a unicode bar chart.
 func renderSparkline(samples []float64) string {
 	if len(samples) == 0 {
 		return ""

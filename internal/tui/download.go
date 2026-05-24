@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// formatBytes converts bytes to a human-readable string (KB, MB, GB).
 func formatBytes(b int64) string {
 	switch {
 	case b < 1024:
@@ -20,6 +21,7 @@ func formatBytes(b int64) string {
 	}
 }
 
+// downloadView renders the current speed, progress percentage, and sparkline.
 func downloadView(d *DownloadState) string {
 	var rows []string
 

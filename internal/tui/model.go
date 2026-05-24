@@ -17,6 +17,7 @@ const (
 	mbpsToBytes      = 125_000 // 1 Mbps = 125,000 bytes/s
 )
 
+// Phase constants represent the sequential test lifecycle.
 type phase int
 
 const (

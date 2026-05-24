@@ -25,6 +25,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// handleKey processes keyboard input: q to quit, r to restart.
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "q", "ctrl+c":
@@ -45,18 +46,21 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// handleClientInfo stores client info and moves to server selection.
 func (m Model) handleClientInfo(msg clientInfoMsg) (tea.Model, tea.Cmd) {
 	m.clientInfo = msg.info
 	m.phase = phaseInfo
 	return m, tea.Batch(m.fetchServers(), m.spinner.Tick)
 }
 
+// handleServer stores the chosen server and starts latency measurement.
 func (m Model) handleServer(msg serverMsg) (tea.Model, tea.Cmd) {
 	m.server = msg.server
 	m.phase = phasePinging
 	return m, tea.Batch(m.measureLatency(), m.spinner.Tick)
 }
 
+// handleLatency stores ping results and starts the download test.
 func (m Model) handleLatency(msg latencyMsg) (tea.Model, tea.Cmd) {
 	m.latency = msg.latency
 	m.phase = phaseDownloading
@@ -65,6 +69,7 @@ func (m Model) handleLatency(msg latencyMsg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmd, m.spinner.Tick)
 }
 
+// handleDownloadProgress updates speed/samples and checks for completion.
 func (m Model) handleDownloadProgress(msg downloadProgressMsg) (tea.Model, tea.Cmd) {
 	m.download = &DownloadState{
 		Speed:   msg.state.Speed,

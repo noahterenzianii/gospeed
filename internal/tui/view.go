@@ -20,6 +20,7 @@ func (m Model) View() string {
 	return fmt.Sprintf("%s\n\n  %s\n%s", header, mutedStyle.Render("fetching client info..."), m.footerView())
 }
 
+// buildScreens collects all non-nil result views in order.
 func (m Model) buildScreens() []string {
 	var screens []string
 	if m.clientInfo != nil {
@@ -37,6 +38,7 @@ func (m Model) buildScreens() []string {
 	return screens
 }
 
+// pingScreen shows either latency results or a spinner for in-progress phases.
 func (m Model) pingScreen() string {
 	if m.latency != nil {
 		return pingView(m.latency)
@@ -55,6 +57,7 @@ func (m Model) pingScreen() string {
 	return fmt.Sprintf("  %s %s", dimStyle.Render(m.spinner.View()), status)
 }
 
+// downloadScreen shows the download speed view during/after measurement.
 func (m Model) downloadScreen() string {
 	if (m.phase == phaseDownloading || m.phase == phaseDownload) && m.download != nil {
 		return downloadView(m.download)
