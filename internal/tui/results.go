@@ -29,5 +29,8 @@ func (m Model) resultsView() string {
 		mutedStyle.Render("ping"), ping,
 		mutedStyle.Render("jitter"), jit))
 
+	totalDur := m.download.Elapsed + m.upload.Elapsed
+	rows = append(rows, addField("duration", fmt.Sprintf("%.1f s", totalDur.Seconds()), textMuted))
+
 	return strings.Join(rows, "\n")
 }

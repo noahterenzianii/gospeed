@@ -14,7 +14,6 @@ const (
 	transferDuration = 10 * time.Second
 	transferStreams  = 4
 	transferBufSize  = 100
-	mbpsToBytes      = 125_000 // 1 Mbps = 125,000 bytes/s
 )
 
 // Phase constants represent the sequential test lifecycle.

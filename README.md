@@ -1,10 +1,6 @@
 # gospeed
 
-A small Go CLI that measures download and upload speed by automatically selecting the endpoint with the lowest latency.
-
-## Requirements
-
-- Go (version defined in `go.mod`)
+A Go terminal UI for measuring internet speed via [LibreSpeed](https://librespeed.org/)-compatible servers. Automatically selects the best endpoint and displays real-time results with sparklines.
 
 ## Quick start
 
@@ -12,20 +8,34 @@ A small Go CLI that measures download and upload speed by automatically selectin
 make run
 ```
 
-Useful commands:
+## Usage
 
-```bash
-make build   # build ./gospeed from ./cmd/gospeed
-make run     # build and run
-make lint    # go vet ./...
-make clean   # remove binary
-```
+| Command | Description |
+|---|---|
+| `make run` | Build and launch the TUI |
+| `make build` | Build binary to `./gospeed` |
+| `make lint` | Run `go vet ./...` |
+| `make clean` | Remove binary |
+### TUI controls
 
+| Key | Action |
+|---|---|
+| `q` / `Ctrl+C` | Quit |
+| `r` | Redo the test (shown after completion) |
+
+## Features
+
+- **Adaptive color palette** — automatically adjusts contrast for light and dark terminals
+- **Real-time sparklines** — visual trend of download/upload speed during the test
+- **Organized sections** — client info, server, latency, download, upload, results
 ## Project layout
 
 ```text
-cmd/gospeed/main.go        # CLI entrypoint
-internal/app/run.go        # app orchestration
-internal/endpoints/        # endpoint discovery, ping, and selection
-internal/speedtest/        # download and upload speed measurement
+cmd/              # entrypoints
+└── gospeed/
+internal/
+├── app/          # CLI-mode orchestration
+├── endpoints/    # LibreSpeed API client, ping, server selection
+├── speedtest/    # download/upload measurement with progress callbacks
+└── tui/          # Bubbletea TUI — model, views, styling, commands
 ```

@@ -22,14 +22,17 @@ func (m Model) View() string {
 
 	load := fmt.Sprintf("  %s %s",
 		lipgloss.NewStyle().Foreground(accentCyan).Render(m.spinner.View()),
-		lipgloss.NewStyle().Foreground(textSecondary).Render("waiting..."))
+		lipgloss.NewStyle().Foreground(textSecondary).Render("initializing..."))
 	return fmt.Sprintf("%s\n\n%s\n\n%s", header, load, m.footerView())
 }
 
 func (m Model) buildScreens() []string {
 	var screens []string
 	if m.clientInfo != nil {
-		screens = append(screens, connectionView(m.clientInfo, m.server))
+		screens = append(screens, infoView(m.clientInfo))
+	}
+	if m.server != nil {
+		screens = append(screens, serverView(m.server))
 	}
 	if s := m.pingScreen(); s != "" {
 		screens = append(screens, s)
@@ -52,11 +55,11 @@ func (m Model) pingScreen() string {
 	var status string
 	switch m.phase {
 	case phaseFetching:
-		status = "fetching client info"
+		status = "discovering closest server..."
 	case phaseInfo:
-		status = "choosing best server"
+		status = "selecting best server..."
 	case phasePinging:
-		status = "measuring latency"
+		status = "measuring network latency..."
 	default:
 		return ""
 	}
