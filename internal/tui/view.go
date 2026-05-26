@@ -32,7 +32,10 @@ func (m Model) buildScreens() []string {
 	if s := m.pingScreen(); s != "" {
 		screens = append(screens, s)
 	}
-	if s := m.downloadScreen(); s != "" {
+	if s := m.transferScreen(dirDownload); s != "" {
+		screens = append(screens, s)
+	}
+	if s := m.transferScreen(dirUpload); s != "" {
 		screens = append(screens, s)
 	}
 	return screens
@@ -57,12 +60,32 @@ func (m Model) pingScreen() string {
 	return fmt.Sprintf("  %s %s", dimStyle.Render(m.spinner.View()), status)
 }
 
-// downloadScreen shows the download speed view during/after measurement.
-func (m Model) downloadScreen() string {
-	if (m.phase == phaseDownloading || m.phase == phaseDownload) && m.download != nil {
-		return downloadView(m.download)
+// transferScreen shows the transfer speed view during/after measurement.
+func (m Model) transferScreen(dir direction) string {
+	var s *TransferState
+	switch dir {
+	case dirDownload:
+		s = m.download
+	case dirUpload:
+		s = m.upload
 	}
-	return ""
+	if s == nil {
+		return ""
+	}
+
+	show := false
+	switch dir {
+	case dirDownload:
+		show = m.phase == phaseDownloading || m.phase == phaseDownload ||
+			m.phase == phaseUploading || m.phase == phaseUpload
+	case dirUpload:
+		show = m.phase == phaseUploading || m.phase == phaseUpload
+	}
+	if !show {
+		return ""
+	}
+
+	return transferView(s, dir)
 }
 
 func (m Model) footerView() string {

@@ -11,9 +11,9 @@ import (
 const (
 	serverListURL    = "https://librespeed.org/backend-servers/servers.php"
 	pingSamples      = 200
-	downloadDuration = 10 * time.Second
-	downloadStreams  = 4
-	downloadBufSize  = 100
+	transferDuration = 10 * time.Second
+	transferStreams  = 4
+	transferBufSize  = 100
 	mbpsToBytes      = 125_000 // 1 Mbps = 125,000 bytes/s
 )
 
@@ -27,10 +27,19 @@ const (
 	phasePing
 	phaseDownloading
 	phaseDownload
+	phaseUploading
+	phaseUpload
 )
 
-// DownloadState holds live download metrics for the TUI view.
-type DownloadState struct {
+type direction int
+
+const (
+	dirDownload direction = iota
+	dirUpload
+)
+
+// TransferState holds live transfer metrics for the TUI view.
+type TransferState struct {
 	Speed   float64
 	Samples []float64
 	Elapsed time.Duration
@@ -40,9 +49,11 @@ type Model struct {
 	clientInfo *endpoints.ClientInfo
 	server     *endpoints.Server
 	latency    *endpoints.Latency
-	download   *DownloadState
+	download   *TransferState
+	upload     *TransferState
 
 	downloadCh chan tea.Msg
+	uploadCh   chan tea.Msg
 
 	phase   phase
 	spinner spinner.Model
@@ -56,11 +67,11 @@ func NewModel() Model {
 }
 
 func (m Model) canRedo() bool {
-	return m.err != nil || m.phase == phasePing || m.phase == phaseDownload
+	return m.err != nil || m.phase == phasePing || m.phase == phaseDownload || m.phase == phaseUpload
 }
 
 func (m Model) loading() bool {
-	return m.phase == phaseFetching || m.phase == phaseInfo || m.phase == phasePinging || m.phase == phaseDownloading
+	return m.phase == phaseFetching || m.phase == phaseInfo || m.phase == phasePinging || m.phase == phaseDownloading || m.phase == phaseUploading
 }
 
 func (m Model) Init() tea.Cmd {

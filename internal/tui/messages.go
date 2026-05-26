@@ -16,9 +16,10 @@ type latencyMsg struct {
 	latency *endpoints.Latency
 }
 
-type downloadProgressMsg struct {
-	state DownloadState
+type transferProgressMsg struct {
+	state TransferState
 	done  bool
+	dir   direction
 }
 
 type errMsg struct {

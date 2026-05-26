@@ -15,8 +15,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleServer(msg)
 	case latencyMsg:
 		return m.handleLatency(msg)
-	case downloadProgressMsg:
-		return m.handleDownloadProgress(msg)
+	case transferProgressMsg:
+		return m.handleTransferProgress(msg)
 	case spinner.TickMsg:
 		return m.handleSpinnerTick(msg)
 	case errMsg:
@@ -39,6 +39,8 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.latency = nil
 		m.download = nil
 		m.downloadCh = nil
+		m.upload = nil
+		m.uploadCh = nil
 		m.err = nil
 		m.phase = phaseFetching
 		return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
@@ -64,23 +66,38 @@ func (m Model) handleServer(msg serverMsg) (tea.Model, tea.Cmd) {
 func (m Model) handleLatency(msg latencyMsg) (tea.Model, tea.Cmd) {
 	m.latency = msg.latency
 	m.phase = phaseDownloading
-	cmd, ch := m.measureDownload()
-	m.downloadCh = ch
-	return m, tea.Batch(cmd, m.spinner.Tick)
+	return m.startTransfer(dirDownload)
 }
 
-// handleDownloadProgress updates speed/samples and checks for completion.
-func (m Model) handleDownloadProgress(msg downloadProgressMsg) (tea.Model, tea.Cmd) {
-	m.download = &DownloadState{
+// handleTransferProgress updates speed/samples and checks for completion.
+func (m Model) handleTransferProgress(msg transferProgressMsg) (tea.Model, tea.Cmd) {
+	s := &TransferState{
 		Speed:   msg.state.Speed,
 		Samples: msg.state.Samples,
 		Elapsed: msg.state.Elapsed,
 	}
-	if msg.done {
-		m.phase = phaseDownload
-		return m, nil
+	switch msg.dir {
+	case dirDownload:
+		m.download = s
+	case dirUpload:
+		m.upload = s
 	}
-	return m, listenDownload(m.downloadCh)
+
+	if msg.done {
+		switch msg.dir {
+		case dirDownload:
+			m.phase = phaseDownload
+			return m.startTransfer(dirUpload)
+		case dirUpload:
+			m.phase = phaseUpload
+			return m, nil
+		}
+	}
+
+	if msg.dir == dirUpload {
+		m.phase = phaseUploading
+	}
+	return m, listenTransfer(m.chForDir(msg.dir))
 }
 
 func (m Model) handleSpinnerTick(msg spinner.TickMsg) (tea.Model, tea.Cmd) {

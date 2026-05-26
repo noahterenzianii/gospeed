@@ -9,6 +9,8 @@ import (
 	"github.com/noahterenzianii/gospeed/internal/speedtest"
 )
 
+type measureFunc func(url string, duration time.Duration, streams int, onProgress speedtest.ProgressFunc) (float64, error)
+
 // fetchClientInfo retrieves the client's IP, ISP, and location.
 func (m Model) fetchClientInfo() tea.Cmd {
 	return func() tea.Msg {
@@ -47,35 +49,58 @@ func (m Model) measureLatency() tea.Cmd {
 	}
 }
 
-// measureDownload starts a goroutine that streams download progress via a channel.
-func (m Model) measureDownload() (tea.Cmd, chan tea.Msg) {
-	dlURL := m.server.URL(m.server.DlURL)
-	ch := make(chan tea.Msg, downloadBufSize)
+// startTransfer launches a transfer goroutine and returns the listen cmd.
+func (m Model) startTransfer(dir direction) (tea.Model, tea.Cmd) {
+	cmd, ch := m.measureTransfer(dir)
+	switch dir {
+	case dirDownload:
+		m.downloadCh = ch
+	case dirUpload:
+		m.uploadCh = ch
+	}
+	return m, tea.Batch(cmd, m.spinner.Tick)
+}
+
+// measureTransfer starts a goroutine that streams transfer progress via a channel.
+func (m Model) measureTransfer(dir direction) (tea.Cmd, chan tea.Msg) {
+	var url string
+	var fn measureFunc
+
+	switch dir {
+	case dirDownload:
+		url = m.server.URL(m.server.DlURL)
+		fn = speedtest.MeasureDownload
+	case dirUpload:
+		url = m.server.URL(m.server.UlURL)
+		fn = speedtest.MeasureUpload
+	}
+
+	ch := make(chan tea.Msg, transferBufSize)
 	go func() {
 		var samples []float64
 		start := time.Now()
-		speed, err := speedtest.MeasureDownload(dlURL, downloadDuration, downloadStreams, func(mbps float64) {
+		speed, err := fn(url, transferDuration, transferStreams, func(mbps float64) {
 			elapsed := time.Since(start)
 			samples = append(samples, mbps)
 			snapshot := make([]float64, len(samples))
 			copy(snapshot, samples)
 			select {
-			case ch <- downloadProgressMsg{DownloadState{Speed: mbps, Samples: snapshot, Elapsed: elapsed}, false}:
+			case ch <- transferProgressMsg{TransferState{Speed: mbps, Samples: snapshot, Elapsed: elapsed}, false, dir}:
 			default:
 			}
 		})
 		if err != nil {
 			ch <- errMsg{err}
 		} else {
-			ch <- downloadProgressMsg{DownloadState{Speed: speed, Samples: samples, Elapsed: time.Since(start)}, true}
+			ch <- transferProgressMsg{TransferState{Speed: speed, Samples: samples, Elapsed: time.Since(start)}, true, dir}
 		}
 		close(ch)
 	}()
-	return listenDownload(ch), ch
+	return listenTransfer(ch), ch
 }
 
-// listenDownload wraps channel reads as a bubbletea command.
-func listenDownload(ch chan tea.Msg) tea.Cmd {
+// listenTransfer wraps channel reads as a bubbletea command.
+func listenTransfer(ch chan tea.Msg) tea.Cmd {
 	return func() tea.Msg {
 		msg, ok := <-ch
 		if !ok {
@@ -83,4 +108,15 @@ func listenDownload(ch chan tea.Msg) tea.Cmd {
 		}
 		return msg
 	}
+}
+
+// chForDir returns the active channel for the given direction.
+func (m Model) chForDir(dir direction) chan tea.Msg {
+	switch dir {
+	case dirDownload:
+		return m.downloadCh
+	case dirUpload:
+		return m.uploadCh
+	}
+	return nil
 }
