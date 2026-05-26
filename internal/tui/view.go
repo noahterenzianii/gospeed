@@ -38,6 +38,11 @@ func (m Model) buildScreens() []string {
 	if s := m.transferScreen(dirUpload); s != "" {
 		screens = append(screens, s)
 	}
+	if m.phase == phaseUpload {
+		if s := m.resultsView(); s != "" {
+			screens = append(screens, s)
+		}
+	}
 	return screens
 }
 
