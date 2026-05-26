@@ -13,28 +13,21 @@ func (m Model) resultsView() string {
 	}
 
 	var rows []string
+	rows = append(rows, sectionHeader("results", accentPurple))
 
-	dl := lipgloss.NewStyle().Foreground(cCyan).Render(
-		fmt.Sprintf("↓ %.0f Mbps", m.download.Speed),
-	)
-	ul := lipgloss.NewStyle().Foreground(cYellow).Render(
-		fmt.Sprintf("↑ %.0f Mbps", m.upload.Speed),
-	)
+	dl := lipgloss.NewStyle().Foreground(accentCyan).Render(
+		fmt.Sprintf("↓ %.0f Mbps", m.download.Speed))
+	ul := lipgloss.NewStyle().Foreground(accentYellow).Render(
+		fmt.Sprintf("↑ %.0f Mbps", m.upload.Speed))
 	rows = append(rows, fmt.Sprintf("  %s  %s", dl, ul))
 
-	ping := lipgloss.NewStyle().Foreground(cGreen).Render(
-		"◈ " + fmtDuration(m.latency.Ping),
-	)
-	jitter := lipgloss.NewStyle().Foreground(cYellow).Render(
-		fmtDuration(m.latency.Jitter),
-	)
-	rows = append(rows, fmt.Sprintf("  %s %s  •  %s %s",
+	ping := lipgloss.NewStyle().Foreground(accentGreen).Render(
+		fmtDuration(m.latency.Ping))
+	jit := lipgloss.NewStyle().Foreground(accentYellow).Render(
+		fmtDuration(m.latency.Jitter))
+	rows = append(rows, fmt.Sprintf("  %s %s  ·  %s %s",
 		mutedStyle.Render("ping"), ping,
-		mutedStyle.Render("jitter"), jitter,
-	))
-
-	totalDur := m.download.Elapsed + m.upload.Elapsed
-	rows = addField(rows, "durata", fmt.Sprintf("%.1f s", totalDur.Seconds()), cMuted)
+		mutedStyle.Render("jitter"), jit))
 
 	return strings.Join(rows, "\n")
 }

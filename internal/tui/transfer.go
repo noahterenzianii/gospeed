@@ -7,7 +7,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// formatBytes converts bytes to a human-readable string (KB, MB, GB).
 func formatBytes(b int64) string {
 	switch {
 	case b < 1024:
@@ -21,25 +20,51 @@ func formatBytes(b int64) string {
 	}
 }
 
-// transferView renders the current speed, progress percentage, and sparkline.
-func transferView(s *TransferState, dir direction) string {
-	var arrowStr, labelStr, byteLabel string
-	var color lipgloss.Color
+func (m Model) transferView() string {
+	if m.download == nil && m.upload == nil {
+		return ""
+	}
+
+	var sections []string
+
+	if m.download != nil {
+		show := m.phase == phaseDownloading || m.phase == phaseDownload ||
+			m.phase == phaseUploading || m.phase == phaseUpload
+		if show {
+			sections = append(sections, formatTransferContent(m.download, dirDownload))
+		}
+	}
+
+	if m.upload != nil {
+		show := m.phase == phaseUploading || m.phase == phaseUpload
+		if show {
+			sections = append(sections, "", formatTransferContent(m.upload, dirUpload))
+		}
+	}
+
+	if len(sections) == 0 {
+		return ""
+	}
+
+	return strings.Join(sections, "\n")
+}
+
+func formatTransferContent(s *TransferState, dir direction) string {
+	var title, arrow, byteLabel string
+	var accent lipgloss.TerminalColor
 
 	switch dir {
 	case dirDownload:
-		arrowStr = "↓"
-		color = cCyan
-		labelStr = "download"
+		title = "download"
+		arrow = "↓"
 		byteLabel = "received"
+		accent = accentCyan
 	case dirUpload:
-		arrowStr = "↑"
-		color = cYellow
-		labelStr = "upload"
+		title = "upload"
+		arrow = "↑"
 		byteLabel = "sent"
+		accent = accentYellow
 	}
-
-	var rows []string
 
 	pct := s.Elapsed.Seconds() / transferDuration.Seconds()
 	if pct > 1.0 {
@@ -49,16 +74,25 @@ func transferView(s *TransferState, dir direction) string {
 		pct = 0
 	}
 
-	arrow := lipgloss.NewStyle().Foreground(color).Render(arrowStr)
-	val := lipgloss.NewStyle().Foreground(color).Bold(true).Render(fmt.Sprintf("%.0f", s.Speed))
-	pctS := lipgloss.NewStyle().Foreground(color).Render(fmt.Sprintf("%.0f%%", pct*100))
-	rows = append(rows, fmt.Sprintf("  %s %s%s  %s  %s", arrow, val, mutedStyle.Render(" Mbps"), dimStyle.Render(labelStr), pctS))
+	var rows []string
+	rows = append(rows, sectionHeader(title, accent))
 
-	rows = addField(rows, byteLabel, formatBytes(int64(s.Speed*s.Elapsed.Seconds()*mbpsToBytes)), cMuted)
-	rows = addField(rows, "elapsed", fmt.Sprintf("%.1f s", s.Elapsed.Seconds()), cMuted)
+	arrowS := lipgloss.NewStyle().Foreground(accent).Render(arrow)
+	speedS := lipgloss.NewStyle().Foreground(accent).Bold(true).Render(fmt.Sprintf("%.0f", s.Speed))
+	pctS := lipgloss.NewStyle().Foreground(accent).Render(fmt.Sprintf("%.0f%%", pct*100))
+	rows = append(rows, fmt.Sprintf("  %s %s%s  %s",
+		arrowS, speedS, mutedStyle.Render(" Mbps"), pctS))
+
+	bytesStr := formatBytes(int64(s.Speed * s.Elapsed.Seconds() * mbpsToBytes))
+	elapsedStr := fmt.Sprintf("%.1f s", s.Elapsed.Seconds())
+	rows = append(rows, fmt.Sprintf("    %s %s  ·  %s %s",
+		mutedStyle.Render(byteLabel),
+		lipgloss.NewStyle().Foreground(textSecondary).Render(bytesStr),
+		mutedStyle.Render("elapsed"),
+		lipgloss.NewStyle().Foreground(textSecondary).Render(elapsedStr)))
 
 	if len(s.Samples) > 0 {
-		rows = addField(rows, "samples", renderSparkline(s.Samples), color)
+		rows = append(rows, "  "+lipgloss.NewStyle().Foreground(accent).Render(renderSparkline(s.Samples)))
 	}
 
 	return strings.Join(rows, "\n")

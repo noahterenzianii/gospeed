@@ -9,7 +9,6 @@ import (
 	"github.com/noahterenzianii/gospeed/internal/endpoints"
 )
 
-// fmtDuration formats a duration as a human-readable millisecond string.
 func fmtDuration(d time.Duration) string {
 	ms := float64(d) / float64(time.Millisecond)
 	if ms < 1 {
@@ -20,30 +19,18 @@ func fmtDuration(d time.Duration) string {
 
 func pingView(latency *endpoints.Latency) string {
 	var rows []string
-
-	latLabel := labelStyle.Render("latency")
-	latVal := lipgloss.NewStyle().Foreground(cGreen).Bold(true).Render(
-		fmtDuration(latency.Ping),
-	)
-	rows = append(rows, fmt.Sprintf("  %s%s", latLabel, latVal))
-
-	jitLabel := labelStyle.Render("jitter")
-	jitVal := lipgloss.NewStyle().Foreground(cYellow).Render(
-		fmtDuration(latency.Jitter),
-	)
-	rows = append(rows, fmt.Sprintf("  %s%s", jitLabel, jitVal))
-
+	rows = append(rows, sectionHeader("latency", accentGreen))
+	rows = append(rows, fmt.Sprintf("  %s  %s  ·  %s  %s",
+		mutedStyle.Render("ping"),
+		lipgloss.NewStyle().Foreground(accentGreen).Bold(true).Render(fmtDuration(latency.Ping)),
+		mutedStyle.Render("jitter"),
+		lipgloss.NewStyle().Foreground(accentYellow).Render(fmtDuration(latency.Jitter))))
 	if len(latency.Samples) > 0 {
-		sampleLabel := labelStyle.Render("samples")
 		f64 := make([]float64, len(latency.Samples))
 		for i, d := range latency.Samples {
 			f64[i] = float64(d)
 		}
-		spark := lipgloss.NewStyle().Foreground(cGreen).Render(
-			renderSparkline(f64),
-		)
-		rows = append(rows, fmt.Sprintf("  %s%s", sampleLabel, spark))
+		rows = append(rows, "  "+lipgloss.NewStyle().Foreground(accentGreen).Render(renderSparkline(f64)))
 	}
-
 	return strings.Join(rows, "\n")
 }

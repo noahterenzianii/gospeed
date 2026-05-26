@@ -2,23 +2,37 @@ package tui
 
 import "github.com/charmbracelet/lipgloss"
 
-// Colors from the mockup palette
+// Accent colors — adaptive to background for maximum contrast
 var (
-	cWhite  = lipgloss.Color("#f0f0f0")
-	cCyan   = lipgloss.Color("#56d8ff")
-	cGreen  = lipgloss.Color("#3dd68c")
-	cYellow = lipgloss.Color("#ffd166")
-	cRed    = lipgloss.Color("#ff6b6b")
-	cPurple = lipgloss.Color("#c792ea")
-	cMuted  = lipgloss.Color("#555555")
-	cDim    = lipgloss.Color("#444444")
-	cScreen = lipgloss.Color("#c9c9c9")
+	accentCyan   = lipgloss.AdaptiveColor{Light: "#0077aa", Dark: "#00d4ff"}
+	accentGreen  = lipgloss.AdaptiveColor{Light: "#00884a", Dark: "#00e676"}
+	accentYellow = lipgloss.AdaptiveColor{Light: "#996600", Dark: "#ffd600"}
+	accentRed    = lipgloss.AdaptiveColor{Light: "#cc0033", Dark: "#ff5252"}
+	accentPurple = lipgloss.AdaptiveColor{Light: "#7744aa", Dark: "#b388ff"}
+	accentOrange = lipgloss.AdaptiveColor{Light: "#b35800", Dark: "#ffab40"}
 )
 
-// Shared lipgloss styles
+// Text colors — adaptive to background for maximum contrast
 var (
-	mutedStyle = lipgloss.NewStyle().Foreground(cMuted)
-	dimStyle   = lipgloss.NewStyle().Foreground(cDim)
+	textPrimary   = lipgloss.AdaptiveColor{Light: "#1a1a2e", Dark: "#e8e8e8"}
+	textSecondary = lipgloss.AdaptiveColor{Light: "#44445a", Dark: "#b0b1c8"}
+	textMuted     = lipgloss.AdaptiveColor{Light: "#66667a", Dark: "#8888a0"}
+	textDim       = lipgloss.AdaptiveColor{Light: "#9999aa", Dark: "#666680"}
 )
 
-const labelWidth = 12
+var (
+	mutedStyle = lipgloss.NewStyle().Foreground(textMuted)
+	dimStyle   = lipgloss.NewStyle().Foreground(textDim)
+)
+
+const labelWidth = 10
+
+func addField(label, value string, color lipgloss.TerminalColor) string {
+	labelS := lipgloss.NewStyle().Foreground(textSecondary).Width(labelWidth).Render(label)
+	valueS := lipgloss.NewStyle().Foreground(color).Render(value)
+	return "  " + labelS + valueS
+}
+
+func sectionHeader(title string, accent lipgloss.TerminalColor) string {
+	return lipgloss.NewStyle().Foreground(accent).Bold(true).Render("  " + title)
+}
