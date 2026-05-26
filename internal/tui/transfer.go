@@ -15,8 +15,7 @@ func (m Model) transferView() string {
 	var sections []string
 
 	if m.download != nil {
-		show := m.phase == phaseDownloading || m.phase == phaseDownload ||
-			m.phase == phaseUploading || m.phase == phaseUpload
+		show := m.phase == phaseDownloading || m.phase == phaseUploading || m.phase == phaseUpload
 		if show {
 			sections = append(sections, formatTransferContent(m.download, dirDownload))
 		}

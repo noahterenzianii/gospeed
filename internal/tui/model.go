@@ -23,9 +23,7 @@ const (
 	phaseFetching phase = iota
 	phaseInfo
 	phasePinging
-	phasePing
 	phaseDownloading
-	phaseDownload
 	phaseUploading
 	phaseUpload
 )
@@ -66,7 +64,7 @@ func NewModel() Model {
 }
 
 func (m Model) canRedo() bool {
-	return m.err != nil || m.phase == phasePing || m.phase == phaseDownload || m.phase == phaseUpload
+	return m.err != nil || m.phase == phaseUpload
 }
 
 func (m Model) loading() bool {

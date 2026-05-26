@@ -86,7 +86,7 @@ func (m Model) handleTransferProgress(msg transferProgressMsg) (tea.Model, tea.C
 	if msg.done {
 		switch msg.dir {
 		case dirDownload:
-			m.phase = phaseDownload
+			m.phase = phaseUploading
 			return m.startTransfer(dirUpload)
 		case dirUpload:
 			m.phase = phaseUpload
