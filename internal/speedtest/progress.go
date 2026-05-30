@@ -11,7 +11,7 @@ type ProgressFunc func(currentMbps float64)
 func startProgress(totalBytes *atomic.Int64, start time.Time, onProgress ProgressFunc) (context.Context, context.CancelFunc) {
 	progressCtx, stopProgress := context.WithCancel(context.Background())
 	go func() {
-		ticker := time.NewTicker(300 * time.Millisecond)
+		ticker := time.NewTicker(150 * time.Millisecond)
 		defer ticker.Stop()
 		for {
 			select {

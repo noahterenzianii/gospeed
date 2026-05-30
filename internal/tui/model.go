@@ -11,7 +11,7 @@ import (
 const (
 	serverListURL    = "https://librespeed.org/backend-servers/servers.php"
 	pingSamples      = 200
-	transferDuration = 10 * time.Second
+	transferDuration = 15 * time.Second
 	transferStreams  = 4
 	transferBufSize  = 100
 )
