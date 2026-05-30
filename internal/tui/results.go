@@ -16,9 +16,9 @@ func (m Model) resultsView() string {
 	rows = append(rows, sectionHeader("results", accentPurple))
 
 	dl := lipgloss.NewStyle().Foreground(accentCyan).Render(
-		fmt.Sprintf("↓ %.0f Mbps", m.download.Speed))
+		fmt.Sprintf("↓ %s Mbps", fmtSpeed(m.download.Speed)))
 	ul := lipgloss.NewStyle().Foreground(accentYellow).Render(
-		fmt.Sprintf("↑ %.0f Mbps", m.upload.Speed))
+		fmt.Sprintf("↑ %s Mbps", fmtSpeed(m.upload.Speed)))
 	rows = append(rows, fmt.Sprintf("  %s  %s", dl, ul))
 
 	ping := lipgloss.NewStyle().Foreground(accentGreen).Render(

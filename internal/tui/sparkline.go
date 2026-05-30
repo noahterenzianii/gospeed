@@ -52,7 +52,7 @@ func renderSparkline(samples []float64) string {
 	bars := []rune("▁▂▃▄▅▆▇█")
 	var sb strings.Builder
 	for _, s := range ds {
-		idx := 7
+		idx := 0
 		if max > min {
 			idx = int((s - min) * 7 / (max - min))
 			if idx > 7 {
