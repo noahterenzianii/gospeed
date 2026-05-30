@@ -4,27 +4,38 @@ import (
 	"strings"
 )
 
-const sparkWidth = 30
+const (
+	sparkWidth   = 30
+	sampleWindow = 100
+)
 
-// renderSparkline downsamples data to sparkWidth buckets and renders a unicode bar chart.
 func renderSparkline(samples []float64) string {
 	if len(samples) == 0 {
 		return ""
 	}
 
 	ds := samples
-	if len(samples) > sparkWidth {
-		bucketSize := len(samples) / sparkWidth
-		ds = make([]float64, sparkWidth)
+	if len(samples) > sampleWindow {
+		ds = samples[len(samples)-sampleWindow:]
+	}
+
+	if len(ds) > sparkWidth {
+		n := len(ds)
+		out := make([]float64, sparkWidth)
 		for i := range sparkWidth {
-			start := i * bucketSize
-			bucket := samples[start : start+bucketSize]
+			start := i * n / sparkWidth
+			end := (i + 1) * n / sparkWidth
+			bucket := ds[start:end]
+			if len(bucket) == 0 {
+				continue
+			}
 			var total float64
 			for _, s := range bucket {
 				total += s
 			}
-			ds[i] = total / float64(bucketSize)
+			out[i] = total / float64(len(bucket))
 		}
+		ds = out
 	}
 
 	min, max := ds[0], ds[0]
@@ -53,5 +64,3 @@ func renderSparkline(samples []float64) string {
 	}
 	return sb.String()
 }
-
-
