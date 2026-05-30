@@ -7,7 +7,10 @@ import (
 	"time"
 )
 
-const clientInfoURL = "https://ipinfo.io/json"
+// External API endpoints.
+const (
+	clientInfoURL = "https://ipinfo.io/json"
+)
 
 func FetchClientInfo() (*ClientInfo, error) {
 	client := &http.Client{Timeout: 5 * time.Second}

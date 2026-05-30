@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// Sparkline dimensions.
 const (
 	sparkWidth   = 30
 	sampleWindow = 100

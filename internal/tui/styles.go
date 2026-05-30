@@ -9,7 +9,6 @@ var (
 	accentYellow = lipgloss.AdaptiveColor{Light: "#996600", Dark: "#ffd600"}
 	accentRed    = lipgloss.AdaptiveColor{Light: "#cc0033", Dark: "#ff5252"}
 	accentPurple = lipgloss.AdaptiveColor{Light: "#7744aa", Dark: "#b388ff"}
-	accentOrange = lipgloss.AdaptiveColor{Light: "#b35800", Dark: "#ffab40"}
 )
 
 // Text colors — adaptive to background for maximum contrast
@@ -25,7 +24,10 @@ var (
 	dimStyle   = lipgloss.NewStyle().Foreground(textDim)
 )
 
-const labelWidth = 10
+// Layout constants.
+const (
+	labelWidth = 10
+)
 
 func addField(label, value string, color lipgloss.TerminalColor) string {
 	labelS := lipgloss.NewStyle().Foreground(textSecondary).Width(labelWidth).Render(label)
