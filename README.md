@@ -31,10 +31,9 @@ make run
 ## Project layout
 
 ```text
-cmd/              # entrypoints
+cmd/
 └── gospeed/
 internal/
-├── app/          # CLI-mode orchestration
 ├── endpoints/    # LibreSpeed API client, ping, server selection
 ├── speedtest/    # download/upload measurement with progress callbacks
 └── tui/          # Bubbletea TUI — model, views, styling, commands
