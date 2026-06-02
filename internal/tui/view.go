@@ -55,7 +55,7 @@ func (m Model) pingScreen() string {
 	var status string
 	switch m.phase {
 	case phaseFetching:
-		status = "discovering closest server..."
+		status = "fetching client info..."
 	case phaseInfo:
 		status = "selecting best server..."
 	case phasePinging:
