@@ -20,7 +20,8 @@ const (
 type phase int
 
 const (
-	phaseFetching phase = iota
+	phaseIdle phase = iota
+	phaseFetching
 	phaseInfo
 	phasePinging
 	phaseDownloading
@@ -60,7 +61,7 @@ type Model struct {
 func NewModel() Model {
 	s := spinner.New()
 	s.Style = dimStyle
-	return Model{phase: phaseFetching, spinner: s}
+	return Model{phase: phaseIdle, spinner: s}
 }
 
 func (m Model) canRedo() bool {
@@ -68,9 +69,9 @@ func (m Model) canRedo() bool {
 }
 
 func (m Model) loading() bool {
-	return m.phase == phaseFetching || m.phase == phaseInfo || m.phase == phasePinging || m.phase == phaseDownloading || m.phase == phaseUploading
+	return m.phase != phaseIdle && (m.phase == phaseFetching || m.phase == phaseInfo || m.phase == phasePinging || m.phase == phaseDownloading || m.phase == phaseUploading)
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
+	return nil
 }

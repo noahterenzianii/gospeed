@@ -27,6 +27,9 @@ func (m Model) View() string {
 }
 
 func (m Model) buildScreens() []string {
+	if m.phase == phaseIdle {
+		return []string{startView()}
+	}
 	var screens []string
 	if m.clientInfo != nil {
 		screens = append(screens, infoView(m.clientInfo))
@@ -68,7 +71,15 @@ func (m Model) pingScreen() string {
 		lipgloss.NewStyle().Foreground(textSecondary).Render(status))
 }
 
+func startView() string {
+	return fmt.Sprintf("  %s",
+		lipgloss.NewStyle().Foreground(textSecondary).Render("Press s to start the speed test"))
+}
+
 func (m Model) footerView() string {
+	if m.phase == phaseIdle {
+		return mutedStyle.Render("  s: start  •  q: quit")
+	}
 	if m.canRedo() {
 		return mutedStyle.Render("  q: quit  •  r: redo")
 	}

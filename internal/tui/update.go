@@ -44,6 +44,12 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.err = nil
 		m.phase = phaseFetching
 		return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
+	case "s":
+		if m.phase != phaseIdle {
+			return m, nil
+		}
+		m.phase = phaseFetching
+		return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
 	}
 	return m, nil
 }
