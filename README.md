@@ -20,8 +20,9 @@ make run
 
 | Key | Action |
 |---|---|
-| `q` / `Ctrl+C` | Quit |
+| `s` | Start a new test (idle screen only) |
 | `r` | Redo the test (shown after completion) |
+| `q` / `Ctrl+C` | Quit |
 
 ## Features
 
