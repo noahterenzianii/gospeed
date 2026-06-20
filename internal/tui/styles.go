@@ -27,7 +27,12 @@ var (
 // Layout constants.
 const (
 	labelWidth = 10
+	unitMbps   = " Mbps"
 )
+
+func errStyle(msg string) string {
+	return lipgloss.NewStyle().Foreground(accentRed).Render("  error: " + msg)
+}
 
 func addField(label, value string, color lipgloss.TerminalColor) string {
 	labelS := lipgloss.NewStyle().Foreground(textSecondary).Width(labelWidth).Render(label)

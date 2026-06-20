@@ -28,14 +28,14 @@ func (m Model) transferView() string {
 	var sections []string
 
 	if m.download != nil {
-		show := m.phase == phaseDownloading || m.phase == phaseUploading || m.phase == phaseUpload
+		show := m.phase == phaseDownloading || m.phase == phaseUploading || m.phase == phaseDone
 		if show {
 			sections = append(sections, formatTransferContent(m.download, dirDownload))
 		}
 	}
 
 	if m.upload != nil {
-		show := m.phase == phaseUploading || m.phase == phaseUpload
+		show := m.phase == phaseUploading || m.phase == phaseDone
 		if show {
 			sections = append(sections, "", formatTransferContent(m.upload, dirUpload))
 		}
@@ -78,7 +78,7 @@ func formatTransferContent(s *TransferState, dir direction) string {
 	speedS := lipgloss.NewStyle().Foreground(accent).Bold(true).Render(fmtSpeed(s.Speed))
 	pctS := lipgloss.NewStyle().Foreground(accent).Render(fmt.Sprintf("%.0f%%", pct*100))
 	rows = append(rows, fmt.Sprintf("  %s %s%s  %s",
-		arrowS, speedS, mutedStyle.Render(" Mbps"), pctS))
+		arrowS, speedS, mutedStyle.Render(unitMbps), pctS))
 
 	if len(s.Samples) > 0 {
 		rows = append(rows, "  "+lipgloss.NewStyle().Foreground(accent).Render(renderSparkline(s.Samples)))

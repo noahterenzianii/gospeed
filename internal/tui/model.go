@@ -26,7 +26,7 @@ const (
 	phasePinging
 	phaseDownloading
 	phaseUploading
-	phaseUpload
+	phaseDone
 )
 
 type direction int
@@ -66,7 +66,7 @@ func NewModel() Model {
 }
 
 func (m Model) canRedo() bool {
-	return m.err != nil || m.phase == phaseUpload
+	return m.err != nil || m.phase == phaseDone
 }
 
 func (m Model) canConfig() bool {
@@ -74,7 +74,7 @@ func (m Model) canConfig() bool {
 }
 
 func (m Model) loading() bool {
-	return m.phase != phaseIdle && (m.phase == phaseFetching || m.phase == phaseInfo || m.phase == phasePinging || m.phase == phaseDownloading || m.phase == phaseUploading)
+	return m.phase >= phaseFetching && m.phase <= phaseUploading
 }
 
 func (m Model) Init() tea.Cmd {

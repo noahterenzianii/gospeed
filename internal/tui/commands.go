@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -77,13 +78,16 @@ func (m Model) measureTransfer(dir direction) (tea.Cmd, chan tea.Msg) {
 
 	ch := make(chan tea.Msg, transferBufSize)
 	go func() {
+		var mu sync.Mutex
 		var samples []float64
 		start := time.Now()
 		speed, err := fn(url, transferDuration, transferStreams, func(mbps float64) {
 			elapsed := time.Since(start)
+			mu.Lock()
 			samples = append(samples, mbps)
 			snapshot := make([]float64, len(samples))
 			copy(snapshot, samples)
+			mu.Unlock()
 			select {
 			case ch <- transferProgressMsg{TransferState{Speed: mbps, Samples: snapshot, Elapsed: elapsed}, false, dir}:
 			default:
@@ -92,7 +96,11 @@ func (m Model) measureTransfer(dir direction) (tea.Cmd, chan tea.Msg) {
 		if err != nil {
 			ch <- errMsg{err}
 		} else {
-			ch <- transferProgressMsg{TransferState{Speed: speed, Samples: samples, Elapsed: time.Since(start)}, true, dir}
+			mu.Lock()
+			final := make([]float64, len(samples))
+			copy(final, samples)
+			mu.Unlock()
+			ch <- transferProgressMsg{TransferState{Speed: speed, Samples: final, Elapsed: time.Since(start)}, true, dir}
 		}
 		close(ch)
 	}()
@@ -118,5 +126,5 @@ func (m Model) chForDir(dir direction) chan tea.Msg {
 	case dirUpload:
 		return m.uploadCh
 	}
-	return nil
+	panic("tui: unknown direction")
 }

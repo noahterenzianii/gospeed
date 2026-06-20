@@ -15,8 +15,7 @@ func (m Model) View() string {
 	}
 
 	if m.err != nil {
-		errText := lipgloss.NewStyle().Foreground(accentRed).Render("  error: " + m.err.Error())
-		return fmt.Sprintf("%s\n\n%s\n\n%s", header, errText, m.footerView())
+		return fmt.Sprintf("%s\n\n%s\n\n%s", header, errStyle(m.err.Error()), m.footerView())
 	}
 
 	screens := m.buildScreens()
@@ -47,7 +46,7 @@ func (m Model) buildScreens() []string {
 	if s := m.transferView(); s != "" {
 		screens = append(screens, s)
 	}
-	if m.phase == phaseUpload {
+	if m.phase == phaseDone {
 		if s := m.resultsView(); s != "" {
 			screens = append(screens, s)
 		}
