@@ -27,6 +27,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKey processes keyboard input: q to quit, r to restart.
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.showConfig {
+		switch msg.String() {
+		case "c", "esc":
+			m.showConfig = false
+		}
+		return m, nil
+	}
 	switch msg.String() {
 	case "q", "ctrl+c":
 		return m, tea.Quit
@@ -44,6 +51,12 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.err = nil
 		m.phase = phaseFetching
 		return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
+	case "c":
+		if !m.canConfig() {
+			return m, nil
+		}
+		m.showConfig = true
+		return m, nil
 	case "s":
 		if m.phase != phaseIdle {
 			return m, nil

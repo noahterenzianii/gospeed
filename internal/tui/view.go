@@ -10,6 +10,10 @@ import (
 func (m Model) View() string {
 	header := asciiView()
 
+	if m.showConfig {
+		return fmt.Sprintf("%s\n\n%s\n\n%s", header, m.configView(), m.footerView())
+	}
+
 	if m.err != nil {
 		errText := lipgloss.NewStyle().Foreground(accentRed).Render("  error: " + m.err.Error())
 		return fmt.Sprintf("%s\n\n%s\n\n%s", header, errText, m.footerView())
@@ -71,17 +75,24 @@ func (m Model) pingScreen() string {
 		lipgloss.NewStyle().Foreground(textSecondary).Render(status))
 }
 
+func (m Model) configView() string {
+	return ""
+}
+
 func startView() string {
 	return fmt.Sprintf("  %s",
 		lipgloss.NewStyle().Foreground(textSecondary).Render("Press s to start the speed test"))
 }
 
 func (m Model) footerView() string {
+	if m.showConfig {
+		return mutedStyle.Render("  esc/c: close")
+	}
 	if m.phase == phaseIdle {
-		return mutedStyle.Render("  s: start  •  q: quit")
+		return mutedStyle.Render("  s: start  •  c: config  •  q: quit")
 	}
 	if m.canRedo() {
-		return mutedStyle.Render("  q: quit  •  r: redo")
+		return mutedStyle.Render("  q: quit  •  r: redo  •  c: config")
 	}
 	return mutedStyle.Render("  q: quit")
 }

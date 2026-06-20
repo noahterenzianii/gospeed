@@ -53,9 +53,10 @@ type Model struct {
 	downloadCh chan tea.Msg
 	uploadCh   chan tea.Msg
 
-	phase   phase
-	spinner spinner.Model
-	err     error
+	phase      phase
+	spinner    spinner.Model
+	err        error
+	showConfig bool
 }
 
 func NewModel() Model {
@@ -66,6 +67,10 @@ func NewModel() Model {
 
 func (m Model) canRedo() bool {
 	return m.err != nil || m.phase == phaseUpload
+}
+
+func (m Model) canConfig() bool {
+	return m.phase == phaseIdle || m.canRedo()
 }
 
 func (m Model) loading() bool {
