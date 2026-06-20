@@ -22,6 +22,8 @@ make run
 |---|---|
 | `s` | Start a new test (idle screen only) |
 | `r` | Redo the test (shown after completion) |
+| `c` | Open configuration menu (idle or results screen) |
+| `esc` / `c` | Close configuration menu |
 | `q` / `Ctrl+C` | Quit |
 
 ## Features
@@ -29,6 +31,7 @@ make run
 - **Adaptive color palette** — automatically adjusts contrast for light and dark terminals
 - **Real-time sparklines** — visual trend of download/upload speed during the test
 - **Organized sections** — client info, server, latency, download, upload, results
+- **Configuration menu** — press `c` to open settings (idle / results screen only)
 ## Project layout
 
 ```text
