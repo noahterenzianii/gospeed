@@ -75,7 +75,27 @@ func (m Model) pingScreen() string {
 }
 
 func (m Model) configView() string {
-	return ""
+	var rows []string
+	rows = append(rows, sectionHeader("configuration", accentCyan))
+
+	for i, f := range configFields {
+		if f.isSection {
+			rows = append(rows, "", lipgloss.NewStyle().Foreground(accentPurple).Bold(true).Render("  "+f.label))
+			continue
+		}
+		cursor := "  "
+		style := lipgloss.NewStyle().Foreground(textSecondary)
+		if i == m.configCursor {
+			cursor = lipgloss.NewStyle().Foreground(accentGreen).Render("▸ ")
+			style = lipgloss.NewStyle().Foreground(textPrimary)
+		}
+		label := style.Render(f.label)
+		val := lipgloss.NewStyle().Foreground(accentCyan).Render(f.value(m.cfg))
+		pad := strings.Repeat(" ", 24-len(f.label))
+		rows = append(rows, fmt.Sprintf("%s%s%s%s", cursor, label, pad, val))
+	}
+
+	return strings.Join(rows, "\n")
 }
 
 func startView() string {
@@ -85,7 +105,7 @@ func startView() string {
 
 func (m Model) footerView() string {
 	if m.showConfig {
-		return mutedStyle.Render("  esc/c: close")
+		return mutedStyle.Render("  ↑/↓ navigate  •  +/- modify  •  r: reset  •  esc/c: close")
 	}
 	if m.phase == phaseIdle {
 		return mutedStyle.Render("  s: start  •  c: config  •  q: quit")

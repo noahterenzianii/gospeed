@@ -1,6 +1,12 @@
 # gospeed
 
-A Go terminal UI for measuring internet speed via [LibreSpeed](https://librespeed.org/)-compatible servers. Automatically selects the best endpoint and displays real-time results with sparklines.
+A Go terminal UI for internet speed testing via [LibreSpeed](https://librespeed.org/)-compatible servers.
+
+## Install
+
+```bash
+go install github.com/noahterenzianii/gospeed/cmd/gospeed@latest
+```
 
 ## Quick start
 
@@ -8,37 +14,46 @@ A Go terminal UI for measuring internet speed via [LibreSpeed](https://librespee
 make run
 ```
 
-## Usage
+## Commands
 
 | Command | Description |
 |---|---|
-| `make run` | Build and launch the TUI |
-| `make build` | Build binary to `./gospeed` |
-| `make lint` | Run `go vet ./...` |
+| `make run` | Build and launch |
+| `make build` | Build binary |
+| `make lint` | Run go vet |
 | `make clean` | Remove binary |
-### TUI controls
+
+## Keys
 
 | Key | Action |
 |---|---|
-| `s` | Start a new test (idle screen only) |
-| `r` | Redo the test (shown after completion) |
-| `c` | Open configuration menu (idle or results screen) |
-| `esc` / `c` | Close configuration menu |
-| `q` / `Ctrl+C` | Quit |
+| `s` | Start test |
+| `r` | Redo test / reset config values |
+| `c` | Open/close configuration menu |
+| `↑` `↓` | Navigate config menu |
+| `+` `-` | Change config value |
+| `q` | Quit |
 
-## Features
+## Configuration
 
-- **Adaptive color palette** — automatically adjusts contrast for light and dark terminals
-- **Real-time sparklines** — visual trend of download/upload speed during the test
-- **Organized sections** — client info, server, latency, download, upload, results
-- **Configuration menu** — press `c` to open settings (idle / results screen only)
-## Project layout
+| Setting | Default | Min – Max |
+|---|---|---|
+| ping samples | 200 | 10 – 1000 |
+| transfer duration | 15s | 5s – 120s |
+| transfer streams | 4 | 1 – 32 |
+| buffer size | 256 KB | 64 KB – 4096 KB |
+| client info timeout | 5.0s | 1s – 30s |
+| server list timeout | 10.0s | 1s – 30s |
+| ping timeout | 2.0s | 1s – 15s |
+| max concurrent pings | 20 | 5 – 100 |
+| ping attempts | 3 | 1 – 20 |
 
-```text
-cmd/
-└── gospeed/
+## Structure
+
+```
+cmd/gospeed/       main.go
 internal/
-├── endpoints/    # LibreSpeed API client, ping, server selection
-├── speedtest/    # download/upload measurement with progress callbacks
-└── tui/          # Bubbletea TUI — model, views, styling, commands
+├── endpoints/     API client, ping, server selection
+├── speedtest/     download/upload measurement
+└── tui/           terminal UI (Bubbletea)
 ```

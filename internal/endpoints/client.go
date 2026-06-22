@@ -12,8 +12,8 @@ const (
 	clientInfoURL = "https://ipinfo.io/json"
 )
 
-func FetchClientInfo() (*ClientInfo, error) {
-	client := &http.Client{Timeout: 5 * time.Second}
+func FetchClientInfo(timeout time.Duration) (*ClientInfo, error) {
+	client := &http.Client{Timeout: timeout}
 	resp, err := client.Get(clientInfoURL)
 	if err != nil {
 		return nil, fmt.Errorf("fetch client info: %w", err)

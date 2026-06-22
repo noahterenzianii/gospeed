@@ -7,27 +7,27 @@ import (
 	"time"
 )
 
-func FindBestServer(servers []Server) *Server {
+func FindBestServer(servers []Server, concurrency, attempts int, timeout time.Duration) *Server {
 	if len(servers) == 0 {
 		return nil
 	}
 
-	sem := make(chan struct{}, 20) // Create a channel to handle 20 concurrent requests
-	var wg sync.WaitGroup          // Track the number of active connections
+	sem := make(chan struct{}, concurrency)
+	var wg sync.WaitGroup
 
 	for i := range servers {
 		wg.Add(1)
-		sem <- struct{}{} // Occupy a slot in the semaphore: struct{} is used as a zero-memory token
+		sem <- struct{}{}
 
 		go func(s *Server) {
-			defer wg.Done()          // Decrement counter when the request is finished
-			defer func() { <-sem }() // Release the slot back to the semaphore
+			defer wg.Done()
+			defer func() { <-sem }()
 
 			pingURL := s.URL(s.PingURL)
 			success := 0
 			var best time.Duration
-			for _ = range 3 {
-				lat, err := PingServer(pingURL)
+			for _ = range attempts {
+				lat, err := PingServer(pingURL, timeout)
 				if err != nil {
 					continue
 				}

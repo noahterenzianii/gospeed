@@ -31,6 +31,16 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "c", "esc":
 			m.showConfig = false
+		case "up", "k":
+			m.configCursor = prevField(m.configCursor)
+		case "down", "j":
+			m.configCursor = nextField(m.configCursor)
+		case "left", "-":
+			m.applyConfigDelta(-1)
+		case "right", "+", "=":
+			m.applyConfigDelta(1)
+		case "r":
+			m.cfg = defaultConfig()
 		}
 		return m, nil
 	}
@@ -56,6 +66,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.showConfig = true
+		m.configCursor = nextField(-1)
 		return m, nil
 	case "s":
 		if m.phase != phaseIdle {

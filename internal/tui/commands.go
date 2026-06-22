@@ -10,12 +10,12 @@ import (
 	"github.com/noahterenzianii/gospeed/internal/speedtest"
 )
 
-type measureFunc func(url string, duration time.Duration, streams int, onProgress speedtest.ProgressFunc) (float64, error)
+type measureFunc func(url string, duration time.Duration, streams int, bufSize int, onProgress speedtest.ProgressFunc) (float64, error)
 
 // fetchClientInfo retrieves the client's IP, ISP, and location.
 func (m Model) fetchClientInfo() tea.Cmd {
 	return func() tea.Msg {
-		info, err := endpoints.FetchClientInfo()
+		info, err := endpoints.FetchClientInfo(m.cfg.ClientInfoTimeout)
 		if err != nil {
 			return errMsg{err}
 		}
@@ -26,11 +26,11 @@ func (m Model) fetchClientInfo() tea.Cmd {
 // fetchServers fetches the server list and selects the best one.
 func (m Model) fetchServers() tea.Cmd {
 	return func() tea.Msg {
-		servers, err := endpoints.FetchServers(serverListURL)
+		servers, err := endpoints.FetchServers(serverListURL, m.cfg.ServerListTimeout)
 		if err != nil {
 			return errMsg{err}
 		}
-		best := endpoints.FindBestServer(servers)
+		best := endpoints.FindBestServer(servers, m.cfg.MaxConcurrentPings, m.cfg.PingAttempts, m.cfg.PingTimeout)
 		if best == nil {
 			return errMsg{fmt.Errorf("no reachable server")}
 		}
@@ -42,7 +42,7 @@ func (m Model) fetchServers() tea.Cmd {
 func (m Model) measureLatency() tea.Cmd {
 	return func() tea.Msg {
 		pingURL := m.server.URL(m.server.PingURL)
-		latency, err := endpoints.MeasureLatency(pingURL, pingSamples)
+		latency, err := endpoints.MeasureLatency(pingURL, m.cfg.PingSamples, m.cfg.PingTimeout)
 		if err != nil {
 			return errMsg{err}
 		}
@@ -76,12 +76,12 @@ func (m Model) measureTransfer(dir direction) (tea.Cmd, chan tea.Msg) {
 		fn = speedtest.MeasureUpload
 	}
 
-	ch := make(chan tea.Msg, transferBufSize)
+	ch := make(chan tea.Msg, 100)
 	go func() {
 		var mu sync.Mutex
 		var samples []float64
 		start := time.Now()
-		speed, err := fn(url, transferDuration, transferStreams, func(mbps float64) {
+		speed, err := fn(url, m.cfg.TransferDuration, m.cfg.TransferStreams, m.cfg.BufferSize, func(mbps float64) {
 			elapsed := time.Since(start)
 			mu.Lock()
 			samples = append(samples, mbps)

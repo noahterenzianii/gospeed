@@ -8,9 +8,8 @@ import (
 	"time"
 )
 
-var client = &http.Client{Timeout: 2 * time.Second}
-
-func PingServer(url string) (time.Duration, error) {
+func PingServer(url string, timeout time.Duration) (time.Duration, error) {
+	client := &http.Client{Timeout: timeout}
 	start := time.Now()
 	resp, err := client.Get(url)
 	if err != nil {
@@ -22,19 +21,19 @@ func PingServer(url string) (time.Duration, error) {
 	return time.Since(start), nil
 }
 
-func MeasureLatency(url string, count int) (Latency, error) {
+func MeasureLatency(url string, count int, timeout time.Duration) (Latency, error) {
 	if count < 2 {
 		return Latency{}, fmt.Errorf("count must be >= 2")
 	}
 
 	// warmup
-	if _, err := PingServer(url); err != nil {
+	if _, err := PingServer(url, timeout); err != nil {
 		return Latency{}, err
 	}
 
 	samples := make([]time.Duration, 0, count)
 	for range count {
-		lat, err := PingServer(url)
+		lat, err := PingServer(url, timeout)
 		if err != nil {
 			return Latency{}, err
 		}

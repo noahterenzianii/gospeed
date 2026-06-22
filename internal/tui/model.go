@@ -9,11 +9,7 @@ import (
 )
 
 const (
-	serverListURL    = "https://librespeed.org/backend-servers/servers.php"
-	pingSamples      = 200
-	transferDuration = 15 * time.Second
-	transferStreams  = 4
-	transferBufSize  = 100
+	serverListURL = "https://librespeed.org/backend-servers/servers.php"
 )
 
 // Phase constants represent the sequential test lifecycle.
@@ -56,13 +52,15 @@ type Model struct {
 	phase      phase
 	spinner    spinner.Model
 	err        error
-	showConfig bool
+	showConfig   bool
+	configCursor int
+	cfg          *Config
 }
 
 func NewModel() Model {
 	s := spinner.New()
 	s.Style = dimStyle
-	return Model{phase: phaseIdle, spinner: s}
+	return Model{phase: phaseIdle, spinner: s, cfg: defaultConfig()}
 }
 
 func (m Model) canRedo() bool {

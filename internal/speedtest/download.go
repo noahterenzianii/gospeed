@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-func MeasureDownload(url string, duration time.Duration, streams int, onProgress ProgressFunc) (float64, error) {
+func MeasureDownload(url string, duration time.Duration, streams int, bufSize int, onProgress ProgressFunc) (float64, error) {
 	//callback
-	return runMeasurement(duration, streams, onProgress, "download",
+	return runMeasurement(duration, streams, bufSize, onProgress, "download",
 		func(ctx context.Context, client *http.Client, id int, totalBytes, completedRuns *atomic.Int64) {
-			buf := make([]byte, bufferSize)
+			buf := make([]byte, bufSize)
 			run := 0
 			for {
 				if ctx.Err() != nil {

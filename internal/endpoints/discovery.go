@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-func FetchServers(url string) ([]Server, error) {
-	client := http.Client{Timeout: 10 * time.Second}
+func FetchServers(url string, timeout time.Duration) ([]Server, error) {
+	client := http.Client{Timeout: timeout}
 	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err

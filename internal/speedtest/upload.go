@@ -11,13 +11,13 @@ import (
 	"time"
 )
 
-func MeasureUpload(url string, duration time.Duration, streams int, onProgress ProgressFunc) (float64, error) {
-	payload := make([]byte, bufferSize)
+func MeasureUpload(url string, duration time.Duration, streams int, bufSize int, onProgress ProgressFunc) (float64, error) {
+	payload := make([]byte, bufSize)
 	if _, err := rand.Read(payload); err != nil {
 		return 0, fmt.Errorf("failed to generate random data: %w", err)
 	}
 	//callbak
-	return runMeasurement(duration, streams, onProgress, "upload",
+	return runMeasurement(duration, streams, bufSize, onProgress, "upload",
 		func(ctx context.Context, client *http.Client, id int, totalBytes, completedRuns *atomic.Int64) {
 			for {
 				if ctx.Err() != nil {
@@ -38,7 +38,7 @@ func MeasureUpload(url string, duration time.Duration, streams int, onProgress P
 				io.Copy(io.Discard, resp.Body)
 				resp.Body.Close()
 				if resp.StatusCode == http.StatusOK {
-					totalBytes.Add(int64(bufferSize))
+					totalBytes.Add(int64(bufSize))
 					completedRuns.Add(1)
 				}
 				if ctx.Err() != nil {

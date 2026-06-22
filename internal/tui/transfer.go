@@ -30,14 +30,14 @@ func (m Model) transferView() string {
 	if m.download != nil {
 		show := m.phase == phaseDownloading || m.phase == phaseUploading || m.phase == phaseDone
 		if show {
-			sections = append(sections, formatTransferContent(m.download, dirDownload))
+			sections = append(sections, m.formatTransferContent(m.download, dirDownload))
 		}
 	}
 
 	if m.upload != nil {
 		show := m.phase == phaseUploading || m.phase == phaseDone
 		if show {
-			sections = append(sections, "", formatTransferContent(m.upload, dirUpload))
+			sections = append(sections, "", m.formatTransferContent(m.upload, dirUpload))
 		}
 	}
 
@@ -48,7 +48,7 @@ func (m Model) transferView() string {
 	return strings.Join(sections, "\n")
 }
 
-func formatTransferContent(s *TransferState, dir direction) string {
+func (m Model) formatTransferContent(s *TransferState, dir direction) string {
 	var title, arrow string
 	var accent lipgloss.TerminalColor
 
@@ -63,7 +63,7 @@ func formatTransferContent(s *TransferState, dir direction) string {
 		accent = accentYellow
 	}
 
-	pct := s.Elapsed.Seconds() / transferDuration.Seconds()
+	pct := s.Elapsed.Seconds() / m.cfg.TransferDuration.Seconds()
 	if pct > 1.0 {
 		pct = 1.0
 	}

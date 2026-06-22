@@ -9,13 +9,9 @@ import (
 	"time"
 )
 
-// Measurement config.
-const (
-	bufferSize = 256 * 1024
-)
-
 func runMeasurement(duration time.Duration,
 	streams int,
+	bufSize int,
 	onProgress ProgressFunc,
 	direction string,
 	worker func(ctx context.Context,
