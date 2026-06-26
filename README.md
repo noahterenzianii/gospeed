@@ -40,8 +40,8 @@ make run
 |---|---|---|
 | ping samples | 200 | 10 – 1000 |
 | transfer duration | 15s | 5s – 120s |
-| transfer streams | 4 | 1 – 32 |
-| buffer size | 256 KB | 64 KB – 4096 KB |
+| transfer streams | 8 | 1 – 32 |
+| buffer size | 1024 KB | 64 KB – 4096 KB |
 | client info timeout | 5.0s | 1s – 30s |
 | server list timeout | 10.0s | 1s – 30s |
 | ping timeout | 2.0s | 1s – 15s |
