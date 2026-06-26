@@ -26,7 +26,7 @@ func FindBestServer(servers []Server, concurrency, attempts int, timeout time.Du
 			pingURL := s.URL(s.PingURL)
 			success := 0
 			var best time.Duration
-			for _ = range attempts {
+			for range attempts {
 				lat, err := PingServer(pingURL, timeout)
 				if err != nil {
 					continue

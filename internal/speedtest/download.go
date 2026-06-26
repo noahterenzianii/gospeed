@@ -10,7 +10,7 @@ import (
 
 func MeasureDownload(url string, duration time.Duration, streams int, bufSize int, onProgress ProgressFunc) (float64, error) {
 	//callback
-	return runMeasurement(duration, streams, bufSize, onProgress, "download",
+	return runMeasurement(duration, streams, onProgress, "download",
 		func(ctx context.Context, client *http.Client, id int, totalBytes, completedRuns *atomic.Int64) {
 			buf := make([]byte, bufSize)
 			run := 0
@@ -38,7 +38,7 @@ func MeasureDownload(url string, duration time.Duration, streams int, bufSize in
 				}
 				n, err := io.CopyBuffer(io.Discard, resp.Body, buf)
 				resp.Body.Close()
-				if n > 0 {
+				if resp.StatusCode == http.StatusOK {
 					totalBytes.Add(n)
 					completedRuns.Add(1)
 				}

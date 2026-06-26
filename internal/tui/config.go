@@ -144,8 +144,8 @@ func defaultConfig() *Config {
 	return &Config{
 		PingSamples:        200,
 		TransferDuration:   15 * time.Second,
-		TransferStreams:    4,
-		BufferSize:         256 * 1024,
+		TransferStreams:    8,
+		BufferSize:         1024 * 1024,
 		ClientInfoTimeout:  5 * time.Second,
 		ServerListTimeout:  10 * time.Second,
 		PingTimeout:        2 * time.Second,

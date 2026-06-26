@@ -94,13 +94,19 @@ func (m Model) measureTransfer(dir direction) (tea.Cmd, chan tea.Msg) {
 			}
 		})
 		if err != nil {
-			ch <- errMsg{err}
+			select {
+			case ch <- errMsg{err}:
+			default:
+			}
 		} else {
 			mu.Lock()
 			final := make([]float64, len(samples))
 			copy(final, samples)
 			mu.Unlock()
-			ch <- transferProgressMsg{TransferState{Speed: speed, Samples: final, Elapsed: time.Since(start)}, true, dir}
+			select {
+			case ch <- transferProgressMsg{TransferState{Speed: speed, Samples: final, Elapsed: time.Since(start)}, true, dir}:
+			default:
+			}
 		}
 		close(ch)
 	}()
