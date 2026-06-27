@@ -8,8 +8,10 @@ import (
 type Config struct {
 	PingSamples        int
 	TransferDuration   time.Duration
-	TransferStreams    int
-	BufferSize         int
+	DownloadStreams      int
+	DownloadBufferSize   int
+	UploadStreams        int
+	UploadBufferSize     int
 	ClientInfoTimeout  time.Duration
 	ServerListTimeout  time.Duration
 	PingTimeout        time.Duration
@@ -43,20 +45,38 @@ var configFields = []configField{
 			c.TransferDuration = time.Duration(clamp(int(v), 5, 120)) * time.Second
 		},
 	},
+	{label: "download", isSection: true},
 	{
-		label: "transfer streams",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.TransferStreams) },
+		label: "download streams",
+		value: func(c *Config) string { return fmt.Sprintf("%d", c.DownloadStreams) },
 		apply: func(c *Config, d int) {
-			c.TransferStreams = clamp(c.TransferStreams+d, 1, 32)
+			c.DownloadStreams = clamp(c.DownloadStreams+d, 1, 32)
 		},
 	},
 	{
-		label: "buffer size",
+		label: "download buffer",
 		value: func(c *Config) string {
-			return fmt.Sprintf("%d KB", c.BufferSize/1024)
+			return fmt.Sprintf("%d KB", c.DownloadBufferSize/1024)
 		},
 		apply: func(c *Config, d int) {
-			c.BufferSize = clamp(c.BufferSize+d*65536, 65536, 4194304)
+			c.DownloadBufferSize = clamp(c.DownloadBufferSize+d*65536, 65536, 4194304)
+		},
+	},
+	{label: "upload", isSection: true},
+	{
+		label: "upload streams",
+		value: func(c *Config) string { return fmt.Sprintf("%d", c.UploadStreams) },
+		apply: func(c *Config, d int) {
+			c.UploadStreams = clamp(c.UploadStreams+d, 1, 32)
+		},
+	},
+	{
+		label: "upload buffer",
+		value: func(c *Config) string {
+			return fmt.Sprintf("%d KB", c.UploadBufferSize/1024)
+		},
+		apply: func(c *Config, d int) {
+			c.UploadBufferSize = clamp(c.UploadBufferSize+d*65536, 65536, 4194304)
 		},
 	},
 	{label: "timeouts", isSection: true},
@@ -144,8 +164,10 @@ func defaultConfig() *Config {
 	return &Config{
 		PingSamples:        200,
 		TransferDuration:   15 * time.Second,
-		TransferStreams:    8,
-		BufferSize:         1024 * 1024,
+		DownloadStreams:      8,
+		DownloadBufferSize:   1024 * 1024,
+		UploadStreams:        4,
+		UploadBufferSize:     256 * 1024,
 		ClientInfoTimeout:  5 * time.Second,
 		ServerListTimeout:  10 * time.Second,
 		PingTimeout:        2 * time.Second,
