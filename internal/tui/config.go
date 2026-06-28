@@ -8,10 +8,10 @@ import (
 type Config struct {
 	PingSamples        int
 	TransferDuration   time.Duration
-	DownloadStreams      int
-	DownloadBufferSize   int
-	UploadStreams        int
-	UploadBufferSize     int
+	DownloadStreams    int
+	DownloadBufferSize int
+	UploadStreams      int
+	UploadBufferSize   int
 	ClientInfoTimeout  time.Duration
 	ServerListTimeout  time.Duration
 	PingTimeout        time.Duration
@@ -32,7 +32,7 @@ var configFields = []configField{
 		label: "ping samples",
 		value: func(c *Config) string { return fmt.Sprintf("%d", c.PingSamples) },
 		apply: func(c *Config, d int) {
-			c.PingSamples = clamp(c.PingSamples+d*10, 10, 1000)
+			c.PingSamples = clamp(c.PingSamples+d*10, 10, 1_000)
 		},
 	},
 	{
@@ -50,16 +50,7 @@ var configFields = []configField{
 		label: "download streams",
 		value: func(c *Config) string { return fmt.Sprintf("%d", c.DownloadStreams) },
 		apply: func(c *Config, d int) {
-			c.DownloadStreams = clamp(c.DownloadStreams+d, 1, 32)
-		},
-	},
-	{
-		label: "download buffer",
-		value: func(c *Config) string {
-			return fmt.Sprintf("%d KB", c.DownloadBufferSize/1024)
-		},
-		apply: func(c *Config, d int) {
-			c.DownloadBufferSize = clamp(c.DownloadBufferSize+d*65536, 65536, 4194304)
+			c.DownloadStreams = clamp(c.DownloadStreams+d, 1, 64)
 		},
 	},
 	{label: "upload", isSection: true},
@@ -67,16 +58,7 @@ var configFields = []configField{
 		label: "upload streams",
 		value: func(c *Config) string { return fmt.Sprintf("%d", c.UploadStreams) },
 		apply: func(c *Config, d int) {
-			c.UploadStreams = clamp(c.UploadStreams+d, 1, 32)
-		},
-	},
-	{
-		label: "upload buffer",
-		value: func(c *Config) string {
-			return fmt.Sprintf("%d KB", c.UploadBufferSize/1024)
-		},
-		apply: func(c *Config, d int) {
-			c.UploadBufferSize = clamp(c.UploadBufferSize+d*65536, 65536, 4194304)
+			c.UploadStreams = clamp(c.UploadStreams+d, 1, 64)
 		},
 	},
 	{label: "timeouts", isSection: true},
@@ -108,21 +90,6 @@ var configFields = []configField{
 		apply: func(c *Config, d int) {
 			v := c.PingTimeout.Seconds() + float64(d)
 			c.PingTimeout = time.Duration(clamp(int(v), 1, 15)) * time.Second
-		},
-	},
-	{label: "server selection", isSection: true},
-	{
-		label: "max concurrent pings",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.MaxConcurrentPings) },
-		apply: func(c *Config, d int) {
-			c.MaxConcurrentPings = clamp(c.MaxConcurrentPings+d*5, 5, 100)
-		},
-	},
-	{
-		label: "ping attempts",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.PingAttempts) },
-		apply: func(c *Config, d int) {
-			c.PingAttempts = clamp(c.PingAttempts+d, 1, 20)
 		},
 	},
 }
@@ -164,10 +131,10 @@ func defaultConfig() *Config {
 	return &Config{
 		PingSamples:        200,
 		TransferDuration:   15 * time.Second,
-		DownloadStreams:      8,
-		DownloadBufferSize:   1024 * 1024,
-		UploadStreams:        4,
-		UploadBufferSize:     256 * 1024,
+		DownloadStreams:    8,
+		DownloadBufferSize: 1024 * 1024,
+		UploadStreams:      4,
+		UploadBufferSize:   256 * 1024,
 		ClientInfoTimeout:  5 * time.Second,
 		ServerListTimeout:  10 * time.Second,
 		PingTimeout:        2 * time.Second,
