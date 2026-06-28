@@ -65,7 +65,7 @@ var configFields = []configField{
 	{
 		label: "client info timeout",
 		value: func(c *Config) string {
-			return fmt.Sprintf("%.1fs", c.ClientInfoTimeout.Seconds())
+			return fmt.Sprintf("%.0fs", c.ClientInfoTimeout.Seconds())
 		},
 		apply: func(c *Config, d int) {
 			v := c.ClientInfoTimeout.Seconds() + float64(d)
@@ -75,7 +75,7 @@ var configFields = []configField{
 	{
 		label: "server list timeout",
 		value: func(c *Config) string {
-			return fmt.Sprintf("%.1fs", c.ServerListTimeout.Seconds())
+			return fmt.Sprintf("%.0fs", c.ServerListTimeout.Seconds())
 		},
 		apply: func(c *Config, d int) {
 			v := c.ServerListTimeout.Seconds() + float64(d)
@@ -85,7 +85,7 @@ var configFields = []configField{
 	{
 		label: "ping timeout",
 		value: func(c *Config) string {
-			return fmt.Sprintf("%.1fs", c.PingTimeout.Seconds())
+			return fmt.Sprintf("%.0fs", c.PingTimeout.Seconds())
 		},
 		apply: func(c *Config, d int) {
 			v := c.PingTimeout.Seconds() + float64(d)
