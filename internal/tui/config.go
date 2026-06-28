@@ -45,7 +45,7 @@ var configFields = []configField{
 			c.TransferDuration = time.Duration(clamp(int(v), 5, 120)) * time.Second
 		},
 	},
-	{label: "download", isSection: true},
+	{label: "streams", isSection: true},
 	{
 		label: "download streams",
 		value: func(c *Config) string { return fmt.Sprintf("%d", c.DownloadStreams) },
@@ -53,12 +53,29 @@ var configFields = []configField{
 			c.DownloadStreams = clamp(c.DownloadStreams+d, 1, 64)
 		},
 	},
-	{label: "upload", isSection: true},
 	{
 		label: "upload streams",
 		value: func(c *Config) string { return fmt.Sprintf("%d", c.UploadStreams) },
 		apply: func(c *Config, d int) {
 			c.UploadStreams = clamp(c.UploadStreams+d, 1, 64)
+		},
+	},
+	{label: "advanced", isSection: true},
+	{label: "buffers", isSection: true},
+	{
+		label: "download buffer",
+		value: func(c *Config) string { return fmt.Sprintf("%d kb", c.DownloadBufferSize/1024) },
+		apply: func(c *Config, d int) {
+			v := c.DownloadBufferSize/1024 + d*256
+			c.DownloadBufferSize = clamp(v, 64, 16*1024) * 1024
+		},
+	},
+	{
+		label: "upload buffer",
+		value: func(c *Config) string { return fmt.Sprintf("%d kb", c.UploadBufferSize/1024) },
+		apply: func(c *Config, d int) {
+			v := c.UploadBufferSize/1024 + d*256
+			c.UploadBufferSize = clamp(v, 64, 16*1024) * 1024
 		},
 	},
 	{label: "timeouts", isSection: true},
@@ -90,6 +107,21 @@ var configFields = []configField{
 		apply: func(c *Config, d int) {
 			v := c.PingTimeout.Seconds() + float64(d)
 			c.PingTimeout = time.Duration(clamp(int(v), 1, 15)) * time.Second
+		},
+	},
+	{label: "discovery", isSection: true},
+	{
+		label: "max concurrent pings",
+		value: func(c *Config) string { return fmt.Sprintf("%d", c.MaxConcurrentPings) },
+		apply: func(c *Config, d int) {
+			c.MaxConcurrentPings = clamp(c.MaxConcurrentPings+d*5, 5, 100)
+		},
+	},
+	{
+		label: "ping attempts",
+		value: func(c *Config) string { return fmt.Sprintf("%d", c.PingAttempts) },
+		apply: func(c *Config, d int) {
+			c.PingAttempts = clamp(c.PingAttempts+d, 1, 20)
 		},
 	},
 }

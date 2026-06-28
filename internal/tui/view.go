@@ -80,6 +80,10 @@ func (m Model) configView() string {
 
 	for i, f := range configFields {
 		if f.isSection {
+			if f.label == "advanced" {
+				rows = append(rows, "", lipgloss.NewStyle().Foreground(accentYellow).Render("  ── advanced ──"))
+				continue
+			}
 			rows = append(rows, "", lipgloss.NewStyle().Foreground(accentPurple).Bold(true).Render("  "+f.label))
 			continue
 		}
