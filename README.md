@@ -59,9 +59,3 @@ internal/
 ├── speedtest/     download/upload measurement
 └── tui/           terminal UI (Bubbletea)
 ```
-cmd/gospeed/       main.go
-internal/
-├── endpoints/     API client, ping, server selection
-├── speedtest/     download/upload measurement
-└── tui/           terminal UI (Bubbletea)
-```
