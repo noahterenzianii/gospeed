@@ -11,7 +11,7 @@ func FetchServers(url string, timeout time.Duration) ([]Server, error) {
 	client := http.Client{Timeout: timeout}
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetch servers: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -21,7 +21,7 @@ func FetchServers(url string, timeout time.Duration) ([]Server, error) {
 
 	var servers []Server
 	if err := json.NewDecoder(resp.Body).Decode(&servers); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("decode servers: %w", err)
 	}
 	return servers, nil
 }

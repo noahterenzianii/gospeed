@@ -8,12 +8,12 @@ import (
 	"time"
 )
 
-func PingServer(url string, timeout time.Duration) (time.Duration, error) {
+func pingServer(url string, timeout time.Duration) (time.Duration, error) {
 	client := &http.Client{Timeout: timeout}
 	start := time.Now()
 	resp, err := client.Get(url)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("ping %s: %w", url, err)
 	}
 	defer resp.Body.Close()
 	io.Copy(io.Discard, resp.Body)
@@ -27,15 +27,15 @@ func MeasureLatency(url string, count int, timeout time.Duration) (Latency, erro
 	}
 
 	// warmup
-	if _, err := PingServer(url, timeout); err != nil {
-		return Latency{}, err
+	if _, err := pingServer(url, timeout); err != nil {
+		return Latency{}, fmt.Errorf("warmup ping: %w", err)
 	}
 
 	samples := make([]time.Duration, 0, count)
 	for range count {
-		lat, err := PingServer(url, timeout)
+		lat, err := pingServer(url, timeout)
 		if err != nil {
-			return Latency{}, err
+			return Latency{}, fmt.Errorf("ping sample: %w", err)
 		}
 		samples = append(samples, lat)
 	}

@@ -43,21 +43,26 @@ func runMeasurement(duration time.Duration,
 	var completedRuns atomic.Int64
 	var wg sync.WaitGroup
 
+	start := time.Now()
+
 	for workerID := 0; workerID < streams; workerID++ {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			//upload and download callback
 			worker(ctx, &client, id, &totalBytes, &completedRuns)
 		}(workerID)
 	}
-	_, stopProgress := startProgress(&totalBytes, time.Now(), onProgress)
+	stopProgress := startProgress(&totalBytes, start, onProgress)
 	defer stopProgress()
 	wg.Wait()
 	if completedRuns.Load() == 0 {
 		return 0, fmt.Errorf("no successful %s request", direction)
 	}
-	mbps := (float64(totalBytes.Load()) * 8) / duration.Seconds() / 1_000_000
+	elapsed := time.Since(start).Seconds()
+	if elapsed <= 0 {
+		elapsed = duration.Seconds()
+	}
+	mbps := (float64(totalBytes.Load()) * 8) / elapsed / 1_000_000
 	return mbps, nil
 
 }

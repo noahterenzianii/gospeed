@@ -10,6 +10,8 @@ import (
 	"github.com/noahterenzianii/gospeed/internal/speedtest"
 )
 
+const serverListURL = "https://librespeed.org/backend-servers/servers.php"
+
 type measureFunc func(url string, duration time.Duration, streams int, bufSize int, onProgress speedtest.ProgressFunc) (float64, error)
 
 // fetchClientInfo retrieves the client's IP, ISP, and location.
@@ -100,19 +102,13 @@ func (m Model) measureTransfer(dir direction) (tea.Cmd, chan tea.Msg) {
 			}
 		})
 		if err != nil {
-			select {
-			case ch <- errMsg{err}:
-			default:
-			}
+			ch <- errMsg{err}
 		} else {
 			mu.Lock()
 			final := make([]float64, len(samples))
 			copy(final, samples)
 			mu.Unlock()
-			select {
-			case ch <- transferProgressMsg{TransferState{Speed: speed, Samples: final, Elapsed: time.Since(start)}, true, dir}:
-			default:
-			}
+			ch <- transferProgressMsg{TransferState{Speed: speed, Samples: final, Elapsed: time.Since(start)}, true, dir}
 		}
 		close(ch)
 	}()

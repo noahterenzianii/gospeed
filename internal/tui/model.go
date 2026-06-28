@@ -8,10 +8,6 @@ import (
 	"github.com/noahterenzianii/gospeed/internal/endpoints"
 )
 
-const (
-	serverListURL = "https://librespeed.org/backend-servers/servers.php"
-)
-
 // Phase constants represent the sequential test lifecycle.
 type phase int
 

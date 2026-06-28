@@ -9,7 +9,6 @@ import (
 )
 
 func MeasureDownload(url string, duration time.Duration, streams int, bufSize int, onProgress ProgressFunc) (float64, error) {
-	//callback
 	return runMeasurement(duration, streams, onProgress, "download",
 		func(ctx context.Context, client *http.Client, id int, totalBytes, completedRuns *atomic.Int64) {
 			buf := make([]byte, bufSize)

@@ -8,7 +8,7 @@ import (
 
 type ProgressFunc func(currentMbps float64)
 
-func startProgress(totalBytes *atomic.Int64, start time.Time, onProgress ProgressFunc) (context.Context, context.CancelFunc) {
+func startProgress(totalBytes *atomic.Int64, start time.Time, onProgress ProgressFunc) context.CancelFunc {
 	progressCtx, stopProgress := context.WithCancel(context.Background())
 	go func() {
 		ticker := time.NewTicker(150 * time.Millisecond)
@@ -26,5 +26,5 @@ func startProgress(totalBytes *atomic.Int64, start time.Time, onProgress Progres
 			}
 		}
 	}()
-	return progressCtx, stopProgress
+	return stopProgress
 }

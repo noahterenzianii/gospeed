@@ -1,8 +1,6 @@
 package endpoints
 
 import (
-	"math"
-	"sort"
 	"sync"
 	"time"
 )
@@ -14,6 +12,8 @@ func FindBestServer(servers []Server, concurrency, attempts int, timeout time.Du
 
 	sem := make(chan struct{}, concurrency)
 	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var best *Server
 
 	for i := range servers {
 		wg.Add(1)
@@ -25,35 +25,31 @@ func FindBestServer(servers []Server, concurrency, attempts int, timeout time.Du
 
 			pingURL := s.URL(s.PingURL)
 			success := 0
-			var best time.Duration
+			var bestLatency time.Duration
 			for range attempts {
-				lat, err := PingServer(pingURL, timeout)
+				lat, err := pingServer(pingURL, timeout)
 				if err != nil {
 					continue
 				}
-				if success == 0 || lat < best {
-					best = lat
+				if success == 0 || lat < bestLatency {
+					bestLatency = lat
 				}
 				success++
 			}
 			if success == 0 {
-				s.Latency = time.Duration(math.MaxInt64)
-			} else {
-				s.Latency = best
+				return
 			}
+
+			mu.Lock()
+			if best == nil || bestLatency < best.Latency {
+				s.Latency = bestLatency
+				best = s
+			}
+			mu.Unlock()
 		}(&servers[i])
 	}
 
 	wg.Wait()
 
-	// Sort the slice to find the server with the lowest latency
-	sort.Slice(servers, func(i, j int) bool {
-		return servers[i].Latency < servers[j].Latency
-	})
-
-	// If all failed (max latency), return nil
-	if servers[0].Latency == time.Duration(math.MaxInt64) {
-		return nil
-	}
-	return &servers[0]
+	return best
 }

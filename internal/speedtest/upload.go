@@ -16,7 +16,6 @@ func MeasureUpload(url string, duration time.Duration, streams int, bufSize int,
 	if _, err := rand.Read(payload); err != nil {
 		return 0, fmt.Errorf("failed to generate random data: %w", err)
 	}
-	//callbak
 	return runMeasurement(duration, streams, onProgress, "upload",
 		func(ctx context.Context, client *http.Client, id int, totalBytes, completedRuns *atomic.Int64) {
 			for {
