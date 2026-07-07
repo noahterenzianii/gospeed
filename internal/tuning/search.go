@@ -27,7 +27,7 @@ func bufferValues(opts Options, rawBandwidth float64) []int {
 	return vals
 }
 
-func hillClimb(ctx context.Context, url string, values []int, fixed int, isBuffer bool, opts Options, measure MeasureFunc, phase Phase, onProgress ProgressFunc) (StepResult, error) {
+func hillClimb(ctx context.Context, url string, values []int, fixed int, target SearchTarget, opts Options, measure MeasureFunc, phase Phase, onProgress ProgressFunc) (StepResult, error) {
 	if len(values) == 0 {
 		return StepResult{}, fmt.Errorf("no values to test")
 	}
@@ -40,9 +40,9 @@ func hillClimb(ctx context.Context, url string, values []int, fixed int, isBuffe
 			return best, err
 		}
 
-		streams, bufSize := fixed, v
-		if isBuffer {
-			streams, bufSize = v, fixed
+		streams, bufSize := v, fixed
+		if target == SearchBuffer {
+			streams, bufSize = fixed, v
 		}
 
 		throughput, variance, err := runMeasurement(url, streams, bufSize, opts.StepDuration, measure)
@@ -53,7 +53,7 @@ func hillClimb(ctx context.Context, url string, values []int, fixed int, isBuffe
 		sr := StepResult{Param: v, Throughput: throughput, Variance: variance}
 
 		paramName := "streams"
-		if isBuffer {
+		if target == SearchBuffer {
 			paramName = "buffer"
 		}
 

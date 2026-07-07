@@ -6,6 +6,13 @@ type MeasureFunc func(url string, duration time.Duration, streams int, bufSize i
 
 type ProgressFunc func(State)
 
+type SearchTarget int
+
+const (
+	SearchStreams SearchTarget = iota
+	SearchBuffer
+)
+
 type Phase int
 
 const (
