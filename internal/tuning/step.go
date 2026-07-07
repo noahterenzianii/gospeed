@@ -6,7 +6,12 @@ import (
 	"time"
 )
 
-func runMeasurement(url string, streams, bufSize int, duration time.Duration, measure MeasureFunc) (float64, float64, error) {
+func runMeasurement(
+	url string,
+	streams, bufSize int,
+	duration time.Duration,
+	measure MeasureFunc,
+) (float64, float64, error) {
 	var mu sync.Mutex
 	var samples []float64
 

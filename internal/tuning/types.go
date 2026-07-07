@@ -2,7 +2,13 @@ package tuning
 
 import "time"
 
-type MeasureFunc func(url string, duration time.Duration, streams int, bufSize int, onProgress func(float64)) (float64, error)
+type MeasureFunc func(
+	url string,
+	duration time.Duration,
+	streams int,
+	bufSize int,
+	onProgress func(float64),
+) (float64, error)
 
 type ProgressFunc func(State)
 
