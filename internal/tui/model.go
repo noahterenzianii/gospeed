@@ -45,9 +45,9 @@ type Model struct {
 	downloadCh chan tea.Msg
 	uploadCh   chan tea.Msg
 
-	phase      phase
-	spinner    spinner.Model
-	err        error
+	phase        phase
+	spinner      spinner.Model
+	err          error
 	showConfig   bool
 	configCursor int
 	cfg          *Config
@@ -59,12 +59,12 @@ func NewModel() Model {
 	return Model{phase: phaseIdle, spinner: s, cfg: defaultConfig()}
 }
 
-func (m Model) canRedo() bool {
-	return m.err != nil || m.phase == phaseDone
+func (m Model) canStart() bool {
+	return m.phase == phaseIdle || m.err != nil || m.phase == phaseDone
 }
 
 func (m Model) canConfig() bool {
-	return m.phase == phaseIdle || m.canRedo()
+	return m.canStart()
 }
 
 func (m Model) loading() bool {

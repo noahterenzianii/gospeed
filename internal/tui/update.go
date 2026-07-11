@@ -46,20 +46,6 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "q", "ctrl+c":
 		return m, tea.Quit
-	case "r":
-		if !m.canRedo() {
-			return m, nil
-		}
-		m.clientInfo = nil
-		m.server = nil
-		m.latency = nil
-		m.download = nil
-		m.downloadCh = nil
-		m.upload = nil
-		m.uploadCh = nil
-		m.err = nil
-		m.phase = phaseFetching
-		return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
 	case "c":
 		if !m.canConfig() {
 			return m, nil
@@ -68,13 +54,25 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.configCursor = nextField(-1)
 		return m, nil
 	case "s":
-		if m.phase != phaseIdle {
+		if !m.canStart() {
 			return m, nil
 		}
-		m.phase = phaseFetching
-		return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
+		return m.startTest()
 	}
 	return m, nil
+}
+
+func (m Model) startTest() (tea.Model, tea.Cmd) {
+	m.clientInfo = nil
+	m.server = nil
+	m.latency = nil
+	m.download = nil
+	m.downloadCh = nil
+	m.upload = nil
+	m.uploadCh = nil
+	m.err = nil
+	m.phase = phaseFetching
+	return m, tea.Batch(m.fetchClientInfo(), m.spinner.Tick)
 }
 
 func (m Model) handleClientInfo(msg clientInfoMsg) (tea.Model, tea.Cmd) {

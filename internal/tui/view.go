@@ -111,11 +111,8 @@ func (m Model) footerView() string {
 	if m.showConfig {
 		return mutedStyle.Render("  ↑/↓ navigate  •  +/- modify  •  r: reset  •  esc/c: close")
 	}
-	if m.phase == phaseIdle {
+	if m.canStart() {
 		return mutedStyle.Render("  s: start  •  c: config  •  q: quit")
-	}
-	if m.canRedo() {
-		return mutedStyle.Render("  q: quit  •  r: redo  •  c: config")
 	}
 	return mutedStyle.Render("  q: quit")
 }
