@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"time"
+
 	"github.com/noahterenzianii/gospeed/internal/endpoints"
 )
 
@@ -24,4 +26,23 @@ type transferProgressMsg struct {
 
 type errMsg struct {
 	err error
+}
+
+type tuningProgressMsg struct {
+	stepLabel string
+	value     float64
+	streams   int
+	bufSize   int
+	phase     int
+}
+
+type tuningResultMsg struct {
+	dlStreams    int
+	dlBufferSize int
+	dlBandwidth  float64
+	ulStreams    int
+	ulBufferSize int
+	ulBandwidth  float64
+	elapsed      time.Duration
+	err          error
 }

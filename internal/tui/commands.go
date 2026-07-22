@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -8,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/noahterenzianii/gospeed/internal/endpoints"
 	"github.com/noahterenzianii/gospeed/internal/speedtest"
+	"github.com/noahterenzianii/gospeed/internal/tuning"
 )
 
 const serverListURL = "https://librespeed.org/backend-servers/servers.php"
@@ -135,4 +137,109 @@ func (m Model) chForDir(dir direction) chan tea.Msg {
 		return m.uploadCh
 	}
 	panic("tui: unknown direction")
+}
+
+// startTuningCmd starts the tuning process in a goroutine, streaming progress
+// messages via a channel until the final tuningResultMsg is sent.
+func (m Model) startTuningCmd() (tea.Model, tea.Cmd) {
+	ch := make(chan tea.Msg, 100)
+	m.tuningCh = ch
+	m.tuningLabel = ""
+	m.tuningValue = 0
+	m.err = nil
+	m.phase = phaseTuning
+
+	ctx, cancel := context.WithCancel(context.Background())
+	m.tuningCancel = cancel
+
+	go func() {
+		defer cancel()
+
+		servers, err := endpoints.FetchServers(serverListURL, m.cfg.ServerListTimeout)
+		if err != nil {
+			ch <- tuningResultMsg{err: fmt.Errorf("server selection: %w", err)}
+			close(ch)
+			return
+		}
+		best := endpoints.FindBestServer(servers, m.cfg.MaxConcurrentPings, m.cfg.PingAttempts, m.cfg.PingTimeout)
+		if best == nil {
+			ch <- tuningResultMsg{err: fmt.Errorf("no reachable server")}
+			close(ch)
+			return
+		}
+
+		ch <- tuningProgressMsg{stepLabel: fmt.Sprintf("server selected")}
+
+		if err := ctx.Err(); err != nil {
+			ch <- tuningResultMsg{err: err}
+			close(ch)
+			return
+		}
+
+		baseOpts := tuning.Options{
+			MaxStreams:   m.cfg.MaxStreams,
+			StepDuration: 3 * time.Second,
+			LowThreshold: 50,
+			MidThreshold: 200,
+			MinBuffer:    16 * 1024,
+			MaxBuffer:    m.cfg.MaxBuffer,
+		}
+		dlOpts := baseOpts
+		ulOpts := baseOpts
+		ulOpts.IsUpload = true
+
+		makeMeasure := func(fn func(string, time.Duration, int, int, speedtest.ProgressFunc) (float64, error)) tuning.MeasureFunc {
+			return func(url string, duration time.Duration, streams int, bufSize int, onProgress func(float64)) (float64, error) {
+				return fn(url, duration, streams, bufSize, onProgress)
+			}
+		}
+
+		progress := func(st tuning.State) {
+			ch <- tuningProgressMsg{
+				stepLabel: st.StepLabel,
+				value:     st.Current,
+				streams:   st.Streams,
+				bufSize:   st.BufSize,
+				phase:     int(st.Phase),
+			}
+		}
+
+		ch <- tuningProgressMsg{stepLabel: "tuning download..."}
+		dlResult, err := tuning.Tune(ctx, best.URL(best.DlURL), makeMeasure(speedtest.MeasureDownload), progress, dlOpts)
+		if err != nil {
+			ch <- tuningResultMsg{err: fmt.Errorf("download tuning: %w", err)}
+			close(ch)
+			return
+		}
+
+		ch <- tuningProgressMsg{
+			stepLabel: "tuning upload...",
+			streams:   dlResult.Streams,
+			bufSize:   dlResult.BufferSize,
+		}
+		ulResult, err := tuning.Tune(ctx, best.URL(best.UlURL), makeMeasure(speedtest.MeasureUpload), progress, ulOpts)
+		if err != nil {
+			ch <- tuningResultMsg{
+				dlStreams:    dlResult.Streams,
+				dlBufferSize: dlResult.BufferSize,
+				dlBandwidth:  dlResult.RawBandwidth,
+				err:          fmt.Errorf("upload tuning: %w", err),
+			}
+			close(ch)
+			return
+		}
+
+		ch <- tuningResultMsg{
+			dlStreams:    dlResult.Streams,
+			dlBufferSize: dlResult.BufferSize,
+			dlBandwidth:  dlResult.RawBandwidth,
+			ulStreams:    ulResult.Streams,
+			ulBufferSize: ulResult.BufferSize,
+			ulBandwidth:  ulResult.RawBandwidth,
+			elapsed:      dlResult.Elapsed + ulResult.Elapsed,
+		}
+		close(ch)
+	}()
+
+	return m, tea.Batch(listenTransfer(ch), m.spinner.Tick)
 }

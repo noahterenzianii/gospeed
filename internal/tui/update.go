@@ -21,30 +21,36 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleSpinnerTick(msg)
 	case errMsg:
 		return m.handleError(msg)
+	case tuningProgressMsg:
+		return m.handleTuningProgress(msg)
+	case tuningResultMsg:
+		return m.handleTuningResult(msg)
 	}
 	return m, nil
 }
 
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if m.showConfig {
-		switch msg.String() {
-		case "c", "esc":
-			m.showConfig = false
-		case "up", "k":
-			m.configCursor = prevField(m.configCursor)
-		case "down", "j":
-			m.configCursor = nextField(m.configCursor)
-		case "left", "-":
-			m.applyConfigDelta(-1)
-		case "right", "+", "=":
-			m.applyConfigDelta(1)
-		case "r":
-			m.cfg = defaultConfig()
+		return m.handleConfigKey(msg)
+	}
+
+	if m.isTuningDone() {
+		return m.handleTuningDoneKey(msg)
+	}
+
+	if m.tuningCancel != nil && m.phase == phaseTuning {
+		if msg.String() == "q" || msg.String() == "ctrl+c" {
+			m.tuningCancel()
+			return m, tea.Quit
 		}
 		return m, nil
 	}
+
 	switch msg.String() {
 	case "q", "ctrl+c":
+		if m.tuningCancel != nil {
+			m.tuningCancel()
+		}
 		return m, tea.Quit
 	case "c":
 		if !m.canConfig() {
@@ -58,8 +64,72 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		return m.startTest()
+	case "t":
+		if !m.canTune() {
+			return m, nil
+		}
+		return m.startTuningCmd()
 	}
 	return m, nil
+}
+
+func (m Model) isTuningDone() bool {
+	return m.tuningCancel == nil && (m.tuningUlStreams > 0 || m.tuningDlStreams > 0)
+}
+
+func (m Model) handleTuningDoneKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "s":
+		m = m.dismissTuning()
+		return m.startTest()
+	case "c":
+		m = m.dismissTuning()
+		m.showConfig = true
+		m.configCursor = nextField(-1)
+		return m, nil
+	case "t":
+		m = m.dismissTuning()
+		return m.startTuningCmd()
+	case "q", "ctrl+c":
+		return m, tea.Quit
+	case "esc":
+		m = m.dismissTuning()
+		return m, nil
+	}
+	return m, nil
+}
+
+func (m Model) handleConfigKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "c", "esc":
+		m.showConfig = false
+	case "up", "k":
+		m.configCursor = prevField(m.configCursor)
+	case "down", "j":
+		m.configCursor = nextField(m.configCursor)
+	case "left", "-":
+		m.applyConfigDelta(-1)
+	case "right", "+", "=":
+		m.applyConfigDelta(1)
+	case "r":
+		m.cfg = defaultConfig()
+	}
+	return m, nil
+}
+
+func (m Model) dismissTuning() Model {
+	m.tuningLabel = ""
+	m.tuningValue = 0
+	m.tuningDlStreams = 0
+	m.tuningDlBufSize = 0
+	m.tuningDlRawBW = 0
+	m.tuningUlStreams = 0
+	m.tuningUlBufSize = 0
+	m.tuningUlRawBW = 0
+	m.tuningElapsed = 0
+	m.tuningDir = 0
+	m.phase = phaseIdle
+	return m
 }
 
 func (m Model) startTest() (tea.Model, tea.Cmd) {
@@ -121,6 +191,55 @@ func (m Model) handleTransferProgress(msg transferProgressMsg) (tea.Model, tea.C
 		m.phase = phaseUploading
 	}
 	return m, listenTransfer(m.chForDir(msg.dir))
+}
+
+func (m Model) handleTuningProgress(msg tuningProgressMsg) (tea.Model, tea.Cmd) {
+	switch msg.stepLabel {
+	case "tuning download...":
+		m.tuningDir = dirDownload
+	case "tuning upload...":
+		m.tuningDlStreams = msg.streams
+		m.tuningDlBufSize = msg.bufSize
+		m.tuningDir = dirUpload
+	}
+	m.tuningLabel = msg.stepLabel
+	m.tuningValue = msg.value
+	return m, listenTransfer(m.tuningCh)
+}
+
+func (m Model) handleTuningResult(msg tuningResultMsg) (tea.Model, tea.Cmd) {
+	if m.tuningCancel != nil {
+		m.tuningCancel()
+		m.tuningCancel = nil
+	}
+	m.tuningCh = nil
+
+	// Always apply download results (may be partial if upload failed)
+	if msg.dlStreams > 0 {
+		m.cfg.DownloadStreams = msg.dlStreams
+		m.cfg.DownloadBufferSize = msg.dlBufferSize
+		m.tuningDlStreams = msg.dlStreams
+		m.tuningDlBufSize = msg.dlBufferSize
+		m.tuningDlRawBW = msg.dlBandwidth
+	}
+	if msg.ulStreams > 0 {
+		m.cfg.UploadStreams = msg.ulStreams
+		m.cfg.UploadBufferSize = msg.ulBufferSize
+		m.tuningUlStreams = msg.ulStreams
+		m.tuningUlBufSize = msg.ulBufferSize
+		m.tuningUlRawBW = msg.ulBandwidth
+	}
+
+	if msg.err != nil {
+		m.err = msg.err
+		m.phase = phaseIdle
+		return m, nil
+	}
+
+	m.tuningElapsed = msg.elapsed
+	m.tuningLabel = ""
+	m.tuningValue = 0
+	return m, nil
 }
 
 func (m Model) handleSpinnerTick(msg spinner.TickMsg) (tea.Model, tea.Cmd) {

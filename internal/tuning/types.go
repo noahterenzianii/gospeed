@@ -22,9 +22,11 @@ const (
 type Phase int
 
 const (
-	PhaseBandwidthEstimate Phase = iota
-	PhaseStreamSearch
-	PhaseBufferSearch
+	PhaseBandwidthProbe Phase = iota
+	PhaseStreamSweep
+	PhaseBufferSweep
+	PhaseValidation
+	PhaseComplete
 )
 
 type State struct {
@@ -32,28 +34,28 @@ type State struct {
 	StepLabel string
 	Current   float64
 	Elapsed   time.Duration
-}
-
-type StepResult struct {
-	Param      int
-	Throughput float64
-	Variance   float64
+	Streams   int
+	BufSize   int
 }
 
 type Result struct {
 	Streams      int
 	BufferSize   int
 	RawBandwidth float64
+	Elapsed      time.Duration
 }
 
 type Options struct {
-	MaxStreams     int
-	MaxBufferSize  int
-	StepDuration   time.Duration
-	DefaultStreams int
-	DefaultBufSize int
-	LowThreshold   float64
-	MinBuffer      int
-	MaxBuffer      int
-	BufferStep     int
+	MaxStreams   int
+	StepDuration time.Duration
+	LowThreshold float64
+	MidThreshold float64
+	MinBuffer    int
+	MaxBuffer    int
+	IsUpload     bool
+}
+
+type Point struct {
+	Param      int
+	Throughput float64
 }

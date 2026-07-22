@@ -33,6 +33,9 @@ func (m Model) buildScreens() []string {
 	if m.phase == phaseIdle {
 		return []string{startView()}
 	}
+	if m.phase == phaseTuning {
+		return []string{m.tuningView()}
+	}
 	var screens []string
 	if m.clientInfo != nil {
 		screens = append(screens, infoView(m.clientInfo))
@@ -102,6 +105,85 @@ func (m Model) configView() string {
 	return strings.Join(rows, "\n")
 }
 
+func (m Model) tuningView() string {
+	if m.tuningCancel == nil && (m.tuningDlStreams > 0 || m.tuningUlStreams > 0) {
+		return m.tuningDoneView()
+	}
+
+	label := m.tuningLabel
+	switch label {
+	case "tuning download...", "tuning upload...", "":
+		label = "tuning..."
+	}
+
+	var sections []string
+	if m.tuningDlStreams > 0 {
+		sections = append(sections, sectionView(dirDownload,
+			m.tuningDlStreams, m.tuningDlBufSize, 0, ""))
+	}
+	sections = append(sections, sectionView(m.tuningDir,
+		0, 0, m.tuningValue, label))
+
+	return strings.Join(sections, "\n\n")
+}
+
+func (m Model) tuningDoneView() string {
+	var sections []string
+
+	sections = append(sections, sectionHeader("tuning complete", accentGreen))
+
+	if m.tuningDlStreams > 0 {
+		dl := lipgloss.NewStyle().Foreground(accentCyan).Render(
+			fmt.Sprintf("↓ %d streams · %d kb buffer", m.tuningDlStreams, m.tuningDlBufSize/1024))
+		sections = append(sections, fmt.Sprintf("  %s", dl))
+	}
+
+	if m.tuningUlStreams > 0 {
+		ul := lipgloss.NewStyle().Foreground(accentYellow).Render(
+			fmt.Sprintf("↑ %d streams · %d kb buffer", m.tuningUlStreams, m.tuningUlBufSize/1024))
+		sections = append(sections, fmt.Sprintf("  %s", ul))
+	}
+
+	if m.tuningElapsed > 0 {
+		sections = append(sections, addField("elapsed",
+			fmt.Sprintf("%.1f s", m.tuningElapsed.Seconds()), textMuted))
+	}
+
+	return strings.Join(sections, "\n")
+}
+
+func sectionView(dir direction, streams, bufSize int, value float64, label string) string {
+	var title, arrow string
+	var accent lipgloss.TerminalColor
+	switch dir {
+	case dirDownload:
+		title, arrow = "download", "↓"
+		accent = accentCyan
+	case dirUpload:
+		title, arrow = "upload", "↑"
+		accent = accentYellow
+	}
+
+	prefix := lipgloss.NewStyle().Foreground(accent).Render(arrow)
+
+	var line string
+	if streams > 0 {
+		paramS := fmt.Sprintf("%d streams · %d kb buffer", streams, bufSize/1024)
+		line = fmt.Sprintf("  %s  %s",
+			prefix, lipgloss.NewStyle().Foreground(accent).Render(paramS))
+	} else if value > 0 {
+		speedS := lipgloss.NewStyle().Foreground(accent).Bold(true).Render(fmtSpeed(value))
+		line = fmt.Sprintf("  %s  %s%s  %s",
+			prefix, speedS, mutedStyle.Render(unitMbps),
+			lipgloss.NewStyle().Foreground(textSecondary).Render(label))
+	} else {
+		line = fmt.Sprintf("  %s  %s",
+			prefix, lipgloss.NewStyle().Foreground(textSecondary).Render(label))
+	}
+
+	return fmt.Sprintf("%s\n%s", sectionHeader(title, accent), line)
+}
+
 func startView() string {
 	return fmt.Sprintf("  %s",
 		lipgloss.NewStyle().Foreground(textSecondary).Render("Press s to start the speed test"))
@@ -111,8 +193,14 @@ func (m Model) footerView() string {
 	if m.showConfig {
 		return mutedStyle.Render("  ↑/↓ navigate  •  +/- modify  •  r: reset  •  esc/c: close")
 	}
+	if m.isTuningDone() {
+		return mutedStyle.Render("  s: start  •  c: config  •  t: re-tune  •  q: quit  •  esc: dismiss")
+	}
 	if m.canStart() {
-		return mutedStyle.Render("  s: start  •  c: config  •  q: quit")
+		return mutedStyle.Render("  s: start  •  c: config  •  t: tune  •  q: quit")
+	}
+	if m.phase == phaseTuning {
+		return mutedStyle.Render("  q: cancel tuning")
 	}
 	return mutedStyle.Render("  q: quit")
 }

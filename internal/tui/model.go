@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -19,6 +20,7 @@ const (
 	phaseDownloading
 	phaseUploading
 	phaseDone
+	phaseTuning
 )
 
 type direction int
@@ -51,6 +53,20 @@ type Model struct {
 	showConfig   bool
 	configCursor int
 	cfg          *Config
+
+	tuningLabel      string
+	tuningValue      float64
+	tuningCh         chan tea.Msg
+	tuningCancel     context.CancelFunc
+	tuningDir        direction // which direction is currently being tuned
+
+	tuningDlStreams  int         // download result (streams)
+	tuningDlBufSize  int         // download result (buffer)
+	tuningDlRawBW    float64     // download measured bandwidth during tuning
+	tuningUlStreams  int         // upload result (streams)
+	tuningUlBufSize  int         // upload result (buffer)
+	tuningUlRawBW    float64     // upload measured bandwidth during tuning
+	tuningElapsed    time.Duration
 }
 
 func NewModel() Model {
@@ -68,7 +84,14 @@ func (m Model) canConfig() bool {
 }
 
 func (m Model) loading() bool {
-	return m.phase >= phaseFetching && m.phase <= phaseUploading
+	if m.isTuningDone() {
+		return false
+	}
+	return m.phase >= phaseFetching && m.phase <= phaseUploading || m.phase == phaseTuning
+}
+
+func (m Model) canTune() bool {
+	return m.canStart()
 }
 
 func (m Model) Init() tea.Cmd {

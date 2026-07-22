@@ -2,6 +2,7 @@ package tuning
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 )
@@ -15,7 +16,7 @@ func runMeasurement(
 	var mu sync.Mutex
 	var samples []float64
 
-	_, err := measure(url, duration, streams, bufSize, func(mbps float64) {
+	finalMbps, err := measure(url, duration, streams, bufSize, func(mbps float64) {
 		mu.Lock()
 		samples = append(samples, mbps)
 		mu.Unlock()
@@ -27,23 +28,18 @@ func runMeasurement(
 	if len(samples) == 0 {
 		return 0, 0, fmt.Errorf("no samples collected: %w", err)
 	}
+	if finalMbps <= 0 {
+		return 0, 0, fmt.Errorf("zero final throughput: %w", err)
+	}
 
-	start := len(samples) / 5
+	start := len(samples) * 40 / 100
+	if start >= len(samples) {
+		start = len(samples) / 2
+	}
 	stable := samples[start:]
-	if len(stable) == 0 {
-		stable = samples
-	}
 
-	avg := mean(stable)
-	return avg, variance(stable, avg), nil
-}
-
-func mean(samples []float64) float64 {
-	var sum float64
-	for _, v := range samples {
-		sum += v
-	}
-	return sum / float64(len(samples))
+	v := variance(stable, finalMbps)
+	return finalMbps, v, nil
 }
 
 func variance(samples []float64, mean float64) float64 {
@@ -56,4 +52,49 @@ func variance(samples []float64, mean float64) float64 {
 		sum += diff * diff
 	}
 	return sum / float64(len(samples)-1)
+}
+
+type measuredResult struct {
+	throughput float64
+	variance   float64
+}
+
+func measureWithQuality(
+	url string,
+	streams, bufSize int,
+	duration time.Duration,
+	measure MeasureFunc,
+) (measuredResult, error) {
+	result, err := tryMeasure(url, streams, bufSize, duration, measure)
+	if err != nil {
+		return result, err
+	}
+
+	if result.variance > 0 && result.throughput > 0 {
+		cv := math.Sqrt(result.variance) / result.throughput
+		if cv > 0.30 {
+			result2, err2 := tryMeasure(url, streams, bufSize, duration, measure)
+			if err2 == nil && result2.throughput > result.throughput {
+				result = result2
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func tryMeasure(
+	url string,
+	streams, bufSize int,
+	duration time.Duration,
+	measure MeasureFunc,
+) (measuredResult, error) {
+	throughput, v, err := runMeasurement(url, streams, bufSize, duration, measure)
+	if err != nil {
+		return measuredResult{}, err
+	}
+	if throughput <= 0 {
+		return measuredResult{}, fmt.Errorf("zero throughput for streams=%d buf=%d", streams, bufSize)
+	}
+	return measuredResult{throughput: throughput, variance: v}, nil
 }

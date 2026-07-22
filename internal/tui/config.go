@@ -12,6 +12,8 @@ type Config struct {
 	DownloadBufferSize int
 	UploadStreams      int
 	UploadBufferSize   int
+	MaxStreams         int
+	MaxBuffer          int
 	ClientInfoTimeout  time.Duration
 	ServerListTimeout  time.Duration
 	PingTimeout        time.Duration
@@ -50,24 +52,40 @@ var configFields = []configField{
 		label: "download streams",
 		value: func(c *Config) string { return fmt.Sprintf("%d", c.DownloadStreams) },
 		apply: func(c *Config, d int) {
-			c.DownloadStreams = clamp(c.DownloadStreams+d, 1, 64)
+			c.DownloadStreams = clamp(c.DownloadStreams+d, 1, c.MaxStreams)
 		},
 	},
 	{
 		label: "upload streams",
 		value: func(c *Config) string { return fmt.Sprintf("%d", c.UploadStreams) },
 		apply: func(c *Config, d int) {
-			c.UploadStreams = clamp(c.UploadStreams+d, 1, 64)
+			c.UploadStreams = clamp(c.UploadStreams+d, 1, c.MaxStreams)
 		},
 	},
 	{label: "advanced", isSection: true},
+	{label: "tuning", isSection: true},
+	{
+		label: "max streams",
+		value: func(c *Config) string { return fmt.Sprintf("%d", c.MaxStreams) },
+		apply: func(c *Config, d int) {
+			c.MaxStreams = clamp(c.MaxStreams+d*8, 4, 256)
+		},
+	},
+	{
+		label: "max buffer",
+		value: func(c *Config) string { return fmt.Sprintf("%d kb", c.MaxBuffer/1024) },
+		apply: func(c *Config, d int) {
+			v := c.MaxBuffer/1024 + d*512
+			c.MaxBuffer = clamp(v, 256, 64*1024) * 1024
+		},
+	},
 	{label: "buffers", isSection: true},
 	{
 		label: "download buffer",
 		value: func(c *Config) string { return fmt.Sprintf("%d kb", c.DownloadBufferSize/1024) },
 		apply: func(c *Config, d int) {
 			v := c.DownloadBufferSize/1024 + d*256
-			c.DownloadBufferSize = clamp(v, 64, 16*1024) * 1024
+			c.DownloadBufferSize = clamp(v, 64, c.MaxBuffer/1024) * 1024
 		},
 	},
 	{
@@ -75,7 +93,7 @@ var configFields = []configField{
 		value: func(c *Config) string { return fmt.Sprintf("%d kb", c.UploadBufferSize/1024) },
 		apply: func(c *Config, d int) {
 			v := c.UploadBufferSize/1024 + d*256
-			c.UploadBufferSize = clamp(v, 64, 16*1024) * 1024
+			c.UploadBufferSize = clamp(v, 64, c.MaxBuffer/1024) * 1024
 		},
 	},
 	{label: "timeouts", isSection: true},
@@ -167,6 +185,8 @@ func defaultConfig() *Config {
 		DownloadBufferSize: 1024 * 1024,
 		UploadStreams:      4,
 		UploadBufferSize:   256 * 1024,
+		MaxStreams:         64,
+		MaxBuffer:          4 * 1024 * 1024,
 		ClientInfoTimeout:  5 * time.Second,
 		ServerListTimeout:  10 * time.Second,
 		PingTimeout:        2 * time.Second,
