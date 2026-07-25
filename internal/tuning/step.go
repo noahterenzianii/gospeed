@@ -3,7 +3,6 @@ package tuning
 import (
 	"fmt"
 	"math"
-	"sync"
 	"time"
 )
 
@@ -12,34 +11,43 @@ func runMeasurement(
 	streams, bufSize int,
 	duration time.Duration,
 	measure MeasureFunc,
+	warmupPercent int,
 ) (float64, float64, error) {
-	var mu sync.Mutex
 	var samples []float64
 
 	finalMbps, err := measure(url, duration, streams, bufSize, func(mbps float64) {
-		mu.Lock()
 		samples = append(samples, mbps)
-		mu.Unlock()
 	})
 
-	mu.Lock()
-	defer mu.Unlock()
-
 	if len(samples) == 0 {
-		return 0, 0, fmt.Errorf("no samples collected: %w", err)
-	}
-	if finalMbps <= 0 {
-		return 0, 0, fmt.Errorf("zero final throughput: %w", err)
+		if err != nil {
+			return 0, 0, fmt.Errorf("no samples collected: %w", err)
+		}
+		return 0, 0, fmt.Errorf("no samples collected: zero throughput")
 	}
 
-	start := len(samples) * 40 / 100
+	start := len(samples) * warmupPercent / 100
 	if start >= len(samples) {
 		start = len(samples) / 2
 	}
 	stable := samples[start:]
 
-	v := variance(stable, finalMbps)
-	return finalMbps, v, nil
+	var sum float64
+	for _, v := range stable {
+		sum += v
+	}
+	mean := sum / float64(len(stable))
+
+	if mean <= 0 {
+		if finalMbps > 0 {
+			mean = finalMbps
+		} else {
+			return 0, 0, fmt.Errorf("zero throughput")
+		}
+	}
+
+	v := variance(stable, mean)
+	return mean, v, nil
 }
 
 func variance(samples []float64, mean float64) float64 {
@@ -64,19 +72,38 @@ func measureWithQuality(
 	streams, bufSize int,
 	duration time.Duration,
 	measure MeasureFunc,
+	opts Options,
 ) (measuredResult, error) {
-	result, err := tryMeasure(url, streams, bufSize, duration, measure)
+	warmup := opts.warmupPercent()
+
+	result, err := tryMeasure(url, streams, bufSize, duration, measure, warmup)
 	if err != nil {
 		return result, err
 	}
 
-	if result.variance > 0 && result.throughput > 0 {
+	maxCV := opts.maxCV()
+	maxRetries := opts.maxRetries()
+
+	if result.throughput > 0 && result.variance > 0 {
 		cv := math.Sqrt(result.variance) / result.throughput
-		if cv > 0.30 {
-			result2, err2 := tryMeasure(url, streams, bufSize, duration, measure)
-			if err2 == nil && result2.throughput > result.throughput {
-				result = result2
+		if cv > maxCV {
+			bestResult := result
+			bestCV := cv
+			for i := 0; i < maxRetries; i++ {
+				r, err2 := tryMeasure(url, streams, bufSize, duration, measure, warmup)
+				if err2 != nil {
+					continue
+				}
+				cv2 := math.Sqrt(r.variance) / r.throughput
+				if cv2 < bestCV {
+					bestResult = r
+					bestCV = cv2
+				}
+				if cv2 <= maxCV {
+					break
+				}
 			}
+			result = bestResult
 		}
 	}
 
@@ -88,8 +115,9 @@ func tryMeasure(
 	streams, bufSize int,
 	duration time.Duration,
 	measure MeasureFunc,
+	warmupPercent int,
 ) (measuredResult, error) {
-	throughput, v, err := runMeasurement(url, streams, bufSize, duration, measure)
+	throughput, v, err := runMeasurement(url, streams, bufSize, duration, measure, warmupPercent)
 	if err != nil {
 		return measuredResult{}, err
 	}
