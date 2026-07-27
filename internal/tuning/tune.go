@@ -93,7 +93,7 @@ func Tune(
 	}
 	bestBuffer, err := findBest(bufferPoints, opts)
 	if err != nil {
-		bestBuffer := opts.MinBuffer
+		bestBuffer = opts.MinBuffer
 		if len(bufferCandidates) > 0 {
 			bestBuffer = bufferCandidates[0]
 		}
@@ -161,22 +161,22 @@ func probeBandwidth(
 	var err error
 	warmup := opts.warmupPercent()
 	if opts.IsUpload {
-		throughput, _, err = runMeasurement(url, 4, 256*1024, probeDuration, measure, warmup)
+		throughput, _, err = measureWithWarmup(url, 4, 256*1024, probeDuration, measure, warmup)
 		if err != nil || throughput <= 0 {
 			onProgress(State{
 				Phase:     PhaseBandwidthProbe,
 				StepLabel: "retrying probe with conservative parameters...",
 			})
-			throughput, _, err = runMeasurement(url, 2, 128*1024, probeDuration, measure, warmup)
+			throughput, _, err = measureWithWarmup(url, 2, 128*1024, probeDuration, measure, warmup)
 		}
 	} else {
-		throughput, _, err = runMeasurement(url, 8, 512*1024, probeDuration, measure, warmup)
+		throughput, _, err = measureWithWarmup(url, 8, 512*1024, probeDuration, measure, warmup)
 		if err != nil || throughput <= 0 {
 			onProgress(State{
 				Phase:     PhaseBandwidthProbe,
 				StepLabel: "retrying probe with conservative parameters...",
 			})
-			throughput, _, err = runMeasurement(url, 4, 256*1024, probeDuration, measure, warmup)
+			throughput, _, err = measureWithWarmup(url, 4, 256*1024, probeDuration, measure, warmup)
 		}
 	}
 

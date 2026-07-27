@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func runMeasurement(
+func measureWithWarmup(
 	url string,
 	streams, bufSize int,
 	duration time.Duration,
@@ -117,7 +117,7 @@ func tryMeasure(
 	measure MeasureFunc,
 	warmupPercent int,
 ) (measuredResult, error) {
-	throughput, v, err := runMeasurement(url, streams, bufSize, duration, measure, warmupPercent)
+	throughput, v, err := measureWithWarmup(url, streams, bufSize, duration, measure, warmupPercent)
 	if err != nil {
 		return measuredResult{}, err
 	}

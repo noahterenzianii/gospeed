@@ -146,12 +146,6 @@ func (m Model) chForDir(dir direction) chan tea.Msg {
 	panic("tui: unknown direction")
 }
 
-func makeTuningMeasure(fn func(string, time.Duration, int, int, speedtest.ProgressFunc) (float64, error)) tuning.MeasureFunc {
-	return func(url string, duration time.Duration, streams int, bufSize int, onProgress func(float64)) (float64, error) {
-		return fn(url, duration, streams, bufSize, onProgress)
-	}
-}
-
 func tuningProgressFunc(ch chan tea.Msg) func(tuning.State) {
 	return func(st tuning.State) {
 		ch <- tuningProgressMsg{
@@ -262,5 +256,5 @@ func (m Model) tuneDirection(
 		MaxBuffer:    m.cfg.MaxBuffer,
 		IsUpload:     isUpload,
 	}
-	return tuning.Tune(ctx, best.URL(urlPath), makeTuningMeasure(fn), progress, opts)
+	return tuning.Tune(ctx, best.URL(urlPath), fn, progress, opts)
 }

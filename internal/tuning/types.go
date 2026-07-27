@@ -1,13 +1,17 @@
 package tuning
 
-import "time"
+import (
+	"time"
+
+	"github.com/noahterenzianii/gospeed/internal/speedtest"
+)
 
 type MeasureFunc func(
 	url string,
 	duration time.Duration,
 	streams int,
 	bufSize int,
-	onProgress func(float64),
+	onProgress speedtest.ProgressFunc,
 ) (float64, error)
 
 type ProgressFunc func(State)
