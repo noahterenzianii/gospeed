@@ -46,7 +46,7 @@ type Result struct {
 }
 
 const (
-	defaultSweepDegradeThreshold = 0.005
+	defaultSweepDegradeThreshold = 0.01
 	defaultSweepBestThreshold    = 0.02
 	defaultImprovementThreshold  = 0.01
 	defaultTieThreshold          = 0.01

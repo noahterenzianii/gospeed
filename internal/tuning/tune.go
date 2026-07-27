@@ -28,6 +28,12 @@ func Tune(
 	if opts.StepDuration <= 0 {
 		opts.StepDuration = 3 * time.Second
 	}
+	if opts.LowThreshold <= 0 {
+		opts.LowThreshold = 25
+	}
+	if opts.MidThreshold <= 0 {
+		opts.MidThreshold = 100
+	}
 
 	if err := ctx.Err(); err != nil {
 		return res, err

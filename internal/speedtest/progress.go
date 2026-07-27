@@ -2,15 +2,19 @@ package speedtest
 
 import (
 	"context"
+	"sync"
 	"sync/atomic"
 	"time"
 )
 
 type ProgressFunc func(currentMbps float64)
 
-func startProgress(totalBytes *atomic.Int64, start time.Time, onProgress ProgressFunc) context.CancelFunc {
-	progressCtx, stopProgress := context.WithCancel(context.Background())
+func startProgress(totalBytes *atomic.Int64, start time.Time, onProgress ProgressFunc) func() {
+	progressCtx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		ticker := time.NewTicker(150 * time.Millisecond)
 		defer ticker.Stop()
 		for {
@@ -26,5 +30,8 @@ func startProgress(totalBytes *atomic.Int64, start time.Time, onProgress Progres
 			}
 		}
 	}()
-	return stopProgress
+	return func() {
+		cancel()
+		wg.Wait()
+	}
 }
