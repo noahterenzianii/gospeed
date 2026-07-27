@@ -239,6 +239,7 @@ func (m Model) handleTuningResult(msg tuningResultMsg) (tea.Model, tea.Cmd) {
 	m.tuningElapsed = msg.elapsed
 	m.tuningLabel = ""
 	m.tuningValue = 0
+	m.phase = phaseIdle
 	return m, nil
 }
 

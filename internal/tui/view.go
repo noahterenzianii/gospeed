@@ -30,7 +30,7 @@ func (m Model) View() string {
 }
 
 func (m Model) buildScreens() []string {
-	if m.phase == phaseIdle {
+	if m.phase == phaseIdle && !m.isTuningDone() {
 		return []string{startView()}
 	}
 	if m.phase == phaseTuning {
@@ -53,6 +53,9 @@ func (m Model) buildScreens() []string {
 		if s := m.resultsView(); s != "" {
 			screens = append(screens, s)
 		}
+	}
+	if m.isTuningDone() {
+		screens = append(screens, m.tuningDoneView())
 	}
 	return screens
 }
