@@ -54,8 +54,8 @@ const (
 	defaultSweepBestThreshold    = 0.02
 	defaultImprovementThreshold  = 0.01
 	defaultTieThreshold          = 0.01
-	defaultMaxCV                 = 0.30
-	defaultMaxRetries            = 1
+	defaultMaxCV                 = 0.25
+	defaultMaxRetries            = 2
 	defaultWarmupPercent         = 40
 )
 
