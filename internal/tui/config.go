@@ -3,46 +3,32 @@ package tui
 import (
 	"fmt"
 	"time"
-)
 
-type Config struct {
-	PingSamples        int
-	TransferDuration   time.Duration
-	DownloadStreams    int
-	DownloadBufferSize int
-	UploadStreams      int
-	UploadBufferSize   int
-	MaxStreams         int
-	MaxBuffer          int
-	ClientInfoTimeout  time.Duration
-	ServerListTimeout  time.Duration
-	PingTimeout        time.Duration
-	MaxConcurrentPings int
-	PingAttempts       int
-}
+	"github.com/noahterenzianii/gospeed/internal/config"
+)
 
 type configField struct {
 	label     string
 	isSection bool
-	value     func(*Config) string
-	apply     func(*Config, int)
+	value     func(*config.Config) string
+	apply     func(*config.Config, int)
 }
 
 var configFields = []configField{
 	{label: "test", isSection: true},
 	{
 		label: "ping samples",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.PingSamples) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d", c.PingSamples) },
+		apply: func(c *config.Config, d int) {
 			c.PingSamples = clamp(c.PingSamples+d*10, 10, 1_000)
 		},
 	},
 	{
 		label: "transfer duration",
-		value: func(c *Config) string {
+		value: func(c *config.Config) string {
 			return fmt.Sprintf("%.0fs", c.TransferDuration.Seconds())
 		},
-		apply: func(c *Config, d int) {
+		apply: func(c *config.Config, d int) {
 			v := c.TransferDuration.Seconds() + float64(d*5)
 			c.TransferDuration = time.Duration(clamp(int(v), 5, 120)) * time.Second
 		},
@@ -50,15 +36,15 @@ var configFields = []configField{
 	{label: "streams", isSection: true},
 	{
 		label: "download streams",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.DownloadStreams) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d", c.DownloadStreams) },
+		apply: func(c *config.Config, d int) {
 			c.DownloadStreams = clamp(c.DownloadStreams+d, 1, c.MaxStreams)
 		},
 	},
 	{
 		label: "upload streams",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.UploadStreams) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d", c.UploadStreams) },
+		apply: func(c *config.Config, d int) {
 			c.UploadStreams = clamp(c.UploadStreams+d, 1, c.MaxStreams)
 		},
 	},
@@ -66,15 +52,15 @@ var configFields = []configField{
 	{label: "tuning", isSection: true},
 	{
 		label: "max streams",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.MaxStreams) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d", c.MaxStreams) },
+		apply: func(c *config.Config, d int) {
 			c.MaxStreams = clamp(c.MaxStreams+d*8, 4, 256)
 		},
 	},
 	{
 		label: "max buffer",
-		value: func(c *Config) string { return fmt.Sprintf("%d kb", c.MaxBuffer/1024) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d kb", c.MaxBuffer/1024) },
+		apply: func(c *config.Config, d int) {
 			v := c.MaxBuffer/1024 + d*512
 			c.MaxBuffer = clamp(v, 256, 64*1024) * 1024
 		},
@@ -82,16 +68,16 @@ var configFields = []configField{
 	{label: "buffers", isSection: true},
 	{
 		label: "download buffer",
-		value: func(c *Config) string { return fmt.Sprintf("%d kb", c.DownloadBufferSize/1024) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d kb", c.DownloadBufferSize/1024) },
+		apply: func(c *config.Config, d int) {
 			v := c.DownloadBufferSize/1024 + d*256
 			c.DownloadBufferSize = clamp(v, 64, c.MaxBuffer/1024) * 1024
 		},
 	},
 	{
 		label: "upload buffer",
-		value: func(c *Config) string { return fmt.Sprintf("%d kb", c.UploadBufferSize/1024) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d kb", c.UploadBufferSize/1024) },
+		apply: func(c *config.Config, d int) {
 			v := c.UploadBufferSize/1024 + d*256
 			c.UploadBufferSize = clamp(v, 64, c.MaxBuffer/1024) * 1024
 		},
@@ -99,30 +85,30 @@ var configFields = []configField{
 	{label: "timeouts", isSection: true},
 	{
 		label: "client info timeout",
-		value: func(c *Config) string {
+		value: func(c *config.Config) string {
 			return fmt.Sprintf("%.0fs", c.ClientInfoTimeout.Seconds())
 		},
-		apply: func(c *Config, d int) {
+		apply: func(c *config.Config, d int) {
 			v := c.ClientInfoTimeout.Seconds() + float64(d)
 			c.ClientInfoTimeout = time.Duration(clamp(int(v), 1, 30)) * time.Second
 		},
 	},
 	{
 		label: "server list timeout",
-		value: func(c *Config) string {
+		value: func(c *config.Config) string {
 			return fmt.Sprintf("%.0fs", c.ServerListTimeout.Seconds())
 		},
-		apply: func(c *Config, d int) {
+		apply: func(c *config.Config, d int) {
 			v := c.ServerListTimeout.Seconds() + float64(d)
 			c.ServerListTimeout = time.Duration(clamp(int(v), 1, 30)) * time.Second
 		},
 	},
 	{
 		label: "ping timeout",
-		value: func(c *Config) string {
+		value: func(c *config.Config) string {
 			return fmt.Sprintf("%.0fs", c.PingTimeout.Seconds())
 		},
-		apply: func(c *Config, d int) {
+		apply: func(c *config.Config, d int) {
 			v := c.PingTimeout.Seconds() + float64(d)
 			c.PingTimeout = time.Duration(clamp(int(v), 1, 15)) * time.Second
 		},
@@ -130,15 +116,15 @@ var configFields = []configField{
 	{label: "discovery", isSection: true},
 	{
 		label: "max concurrent pings",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.MaxConcurrentPings) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d", c.MaxConcurrentPings) },
+		apply: func(c *config.Config, d int) {
 			c.MaxConcurrentPings = clamp(c.MaxConcurrentPings+d*5, 5, 100)
 		},
 	},
 	{
 		label: "ping attempts",
-		value: func(c *Config) string { return fmt.Sprintf("%d", c.PingAttempts) },
-		apply: func(c *Config, d int) {
+		value: func(c *config.Config) string { return fmt.Sprintf("%d", c.PingAttempts) },
+		apply: func(c *config.Config, d int) {
 			c.PingAttempts = clamp(c.PingAttempts+d, 1, 20)
 		},
 	},
@@ -175,22 +161,4 @@ func nextField(cur int) int {
 func (m Model) applyConfigDelta(delta int) {
 	f := configFields[m.configCursor]
 	f.apply(m.cfg, delta)
-}
-
-func defaultConfig() *Config {
-	return &Config{
-		PingSamples:        200,
-		TransferDuration:   15 * time.Second,
-		DownloadStreams:    8,
-		DownloadBufferSize: 1024 * 1024,
-		UploadStreams:      4,
-		UploadBufferSize:   256 * 1024,
-		MaxStreams:         64,
-		MaxBuffer:          4 * 1024 * 1024,
-		ClientInfoTimeout:  5 * time.Second,
-		ServerListTimeout:  10 * time.Second,
-		PingTimeout:        2 * time.Second,
-		MaxConcurrentPings: 20,
-		PingAttempts:       3,
-	}
 }

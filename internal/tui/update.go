@@ -3,6 +3,7 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/noahterenzianii/gospeed/internal/config"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -103,6 +104,9 @@ func (m Model) handleConfigKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "c", "esc":
 		m.showConfig = false
+		if err := config.Save(m.cfg); err != nil {
+			m.err = err
+		}
 	case "up", "k":
 		m.configCursor = prevField(m.configCursor)
 	case "down", "j":
@@ -112,7 +116,7 @@ func (m Model) handleConfigKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "right", "+", "=":
 		m.applyConfigDelta(1)
 	case "r":
-		m.cfg = defaultConfig()
+		m.cfg = config.DefaultConfig()
 	}
 	return m, nil
 }
@@ -240,6 +244,9 @@ func (m Model) handleTuningResult(msg tuningResultMsg) (tea.Model, tea.Cmd) {
 	m.tuningLabel = ""
 	m.tuningValue = 0
 	m.phase = phaseIdle
+	if err := config.Save(m.cfg); err != nil {
+		m.err = err
+	}
 	return m, nil
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/noahterenzianii/gospeed/internal/config"
 	"github.com/noahterenzianii/gospeed/internal/endpoints"
 )
 
@@ -52,7 +53,7 @@ type Model struct {
 	err          error
 	showConfig   bool
 	configCursor int
-	cfg          *Config
+	cfg          *config.Config
 
 	tuningLabel      string
 	tuningValue      float64
@@ -72,7 +73,7 @@ type Model struct {
 func NewModel() Model {
 	s := spinner.New()
 	s.Style = dimStyle
-	return Model{phase: phaseIdle, spinner: s, cfg: defaultConfig()}
+	return Model{phase: phaseIdle, spinner: s, cfg: config.Load()}
 }
 
 func (m Model) canStart() bool {

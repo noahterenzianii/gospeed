@@ -55,6 +55,14 @@ make run
 | max concurrent pings | 20 | 5 – 100 |
 | ping attempts | 3 | 1 – 20 |
 
+## Persistence
+
+Configuration is automatically persisted to `~/.config/gospeed/config.json`:
+
+- **On startup**: Config is loaded from the file (or defaults if missing/invalid)
+- **On config menu exit** (`c` or `esc`): Current settings are saved
+- **After auto-tuning** (`t`): Tuned stream counts and buffer sizes are saved
+
 ## Structure
 
 ```
